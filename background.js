@@ -1,5 +1,3 @@
-// background.js
-
 const getInitialData = () => ({
   version: "1.0",
   config: {
@@ -12,8 +10,9 @@ const getInitialData = () => ({
       },
     ],
   },
+  // 更新统计数据结构
   statistics: {
-    clicks: [],
+    iconStats: {},
   },
 });
 

@@ -1,5 +1,3 @@
-// new_tab.js
-
 document.addEventListener("DOMContentLoaded", () => {
   // --- DOM Element References ---
   const tabContainer = document.getElementById("tab-container");
@@ -45,15 +43,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const result = await chrome.storage.local.get("smartNavData");
     if (result.smartNavData) {
       appData = result.smartNavData;
+      // --- MODIFIED ---: Ensure new stats structure exists for backward compatibility
+      if (!appData.statistics.iconStats) {
+        appData.statistics.iconStats = {};
+      }
       if (appData.config.tabs.length > 0) {
         activeTabId = appData.config.tabs[0].id;
       }
     } else {
-      // This should be handled by background.js, but as a fallback:
       appData = {
         version: "1.0",
         config: { tabs: [{ id: `tab-${Date.now()}`, name: "主页", order: 0, icons: [] }] },
-        statistics: { clicks: [] },
+        statistics: { iconStats: {} }, // --- MODIFIED ---
       };
       activeTabId = appData.config.tabs[0].id;
       await saveData();
@@ -201,7 +202,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const handleIconFormSubmit = async (e) => {
     e.preventDefault();
 
-    // Abort any ongoing favicon fetch
     if (faviconAbortController) {
       faviconAbortController.abort();
     }
@@ -245,6 +245,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (confirm("此操作不可恢复，是否确认删除？")) {
       const tab = appData.config.tabs.find((t) => t.id === activeTabId);
       tab.icons = tab.icons.filter((i) => i.id !== id);
+
+      // --- MODIFIED ---: Also delete associated statistics
+      delete appData.statistics.iconStats[id];
+
       await saveData();
       render();
       iconModal.hide();
@@ -284,7 +288,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     };
-
     // --- 策略 1: 尝试使用 chrome.favicon API (Manifest V3 官方方式) ---
     try {
       console.log("尝试策略 1: chrome.favicon API");
@@ -342,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const targetTab = appData.config.tabs.find((t) => t.id === tabId);
           targetTab.name = newName;
           await saveData();
-          render(); // Re-render main tabs
+          render();
         }
       });
       item.querySelector("button").addEventListener("click", async (e) => {
@@ -350,8 +353,18 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("必须至少保留一个标签页。");
           return;
         }
-        if (confirm(`确定要删除标签页吗？此标签页下的所有网站也将被删除。`)) {
-          const tabId = e.currentTarget.dataset.tabId;
+        const tabId = e.currentTarget.dataset.tabId;
+        const tabToDelete = appData.config.tabs.find((t) => t.id === tabId);
+        if (
+          confirm(`确定要删除标签页 "${tabToDelete.name}" 吗？此标签页下的所有网站也将被删除。`)
+        ) {
+          // --- MODIFIED ---: Also delete statistics for all icons within the deleted tab
+          if (tabToDelete) {
+            tabToDelete.icons.forEach((icon) => {
+              delete appData.statistics.iconStats[icon.id];
+            });
+          }
+
           appData.config.tabs = appData.config.tabs.filter((t) => t.id !== tabId);
           if (activeTabId === tabId) {
             activeTabId = appData.config.tabs[0].id;
@@ -383,28 +396,36 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // --- Statistics ---
+  // --- MODIFIED ---: Updated recordClick function for the new data structure
   const recordClick = async (iconId) => {
-    appData.statistics.clicks.push({
-      iconId: iconId,
-      timestamp: Date.now(),
-    });
+    const stats = appData.statistics.iconStats;
+    if (!stats[iconId]) {
+      stats[iconId] = {
+        totalClicks: 0,
+        timestamps: [],
+      };
+    }
+    stats[iconId].totalClicks++;
+    stats[iconId].timestamps.push(Date.now());
     await saveData();
   };
 
+  // --- MODIFIED ---: Updated generateReport function to read from the new structure
   const generateReport = () => {
-    const clicks = appData.statistics.clicks;
+    const iconStats = appData.statistics.iconStats;
     const allIcons = appData.config.tabs.flatMap((t) => t.icons);
 
-    const getTop10 = (iconIds) => {
-      const counts = iconIds.reduce((acc, id) => {
-        acc[id] = (acc[id] || 0) + 1;
-        return acc;
-      }, {});
+    const getTop10 = (targetIconIds = null) => {
+      let statsArray = Object.entries(iconStats);
 
-      return Object.entries(counts)
-        .map(([iconId, count]) => {
+      if (targetIconIds) {
+        statsArray = statsArray.filter(([iconId, _]) => targetIconIds.includes(iconId));
+      }
+
+      return statsArray
+        .map(([iconId, stats]) => {
           const icon = allIcons.find((i) => i.id === iconId);
-          return icon ? { ...icon, count } : null;
+          return icon ? { ...icon, count: stats.totalClicks } : null;
         })
         .filter(Boolean)
         .sort((a, b) => b.count - a.count)
@@ -412,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     // Global Top 10
-    const globalTop10 = getTop10(clicks.map((c) => c.iconId));
+    const globalTop10 = getTop10();
     renderStatsList(document.getElementById("globalStatsList"), globalTop10);
 
     // Per-tab Top 10
@@ -427,14 +448,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const tab = appData.config.tabs.find((t) => t.id === selectedTabId);
       if (tab) {
         const tabIconIds = tab.icons.map((i) => i.id);
-        const tabClicks = clicks.filter((c) => tabIconIds.includes(c.iconId)).map((c) => c.iconId);
-        const tabTop10 = getTop10(tabClicks);
+        const tabTop10 = getTop10(tabIconIds);
         renderStatsList(document.getElementById("tabStatsList"), tabTop10);
       }
     };
 
+    statsTabSelect.removeEventListener("change", updateTabStats); // Avoid duplicate listeners
     statsTabSelect.addEventListener("change", updateTabStats);
-    updateTabStats(); // Initial call
+    updateTabStats();
   };
 
   const renderStatsList = (listElement, data) => {
@@ -474,12 +495,13 @@ document.addEventListener("DOMContentLoaded", () => {
     URL.revokeObjectURL(url);
   };
 
+  // --- MODIFIED ---: Updated importData with validation for the new structure
   const importData = (event) => {
     const file = event.target.files[0];
     if (!file) return;
 
     if (!confirm("导入将覆盖所有现有数据，此操作不可逆，请确认。")) {
-      importFileInput.value = ""; // Reset file input
+      importFileInput.value = "";
       return;
     }
 
@@ -487,20 +509,25 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
-        // Basic validation
-        if (importedData.version && importedData.config && importedData.statistics) {
+        // Basic validation for the new structure
+        if (
+          importedData.version &&
+          importedData.config &&
+          importedData.statistics &&
+          typeof importedData.statistics.iconStats === "object"
+        ) {
           appData = importedData;
           await saveData();
           alert("导入成功！页面将刷新。");
           location.reload();
         } else {
-          throw new Error("Invalid file format.");
+          throw new Error("Invalid or outdated file format.");
         }
       } catch (error) {
-        alert("导入失败：文件格式错误或已损坏。");
+        alert(`导入失败：${error.message}`);
         console.error(error);
       } finally {
-        importFileInput.value = ""; // Reset file input
+        importFileInput.value = "";
       }
     };
     reader.readAsText(file);
@@ -513,10 +540,10 @@ document.addEventListener("DOMContentLoaded", () => {
   urlInput.addEventListener("blur", () => {
     if (urlInput.value) {
       try {
-        new URL(urlInput.value); // Validate URL
+        new URL(urlInput.value);
         fetchFavicon(urlInput.value);
       } catch (e) {
-        // Invalid URL, do nothing
+        // Invalid URL
       }
     }
   });
