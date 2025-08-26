@@ -261,31 +261,64 @@ document.addEventListener("DOMContentLoaded", () => {
     faviconSpinner.classList.remove("d-none");
     faviconPreview.classList.add("d-none");
 
-    try {
-      // Using Google's favicon service as a reliable fallback.
-      // The `favicon` permission can be less reliable for some sites.
-      const faviconUrl = `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`;
-      const response = await fetch(faviconUrl, { signal });
-      if (!response.ok) throw new Error("Favicon not found");
-
-      const blob = await response.blob();
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        if (!signal.aborted) {
-          faviconPreview.src = reader.result;
-          faviconSpinner.classList.add("d-none");
-          faviconPreview.classList.remove("d-none");
-        }
-      };
-      reader.readAsDataURL(blob);
-    } catch (error) {
-      if (error.name !== "AbortError") {
-        console.error("Favicon fetch error:", error);
-        faviconPreview.src = DEFAULT_FAVICON;
+    const setFavicon = (base64data) => {
+      if (!signal.aborted) {
+        faviconPreview.src = base64data;
         faviconSpinner.classList.add("d-none");
         faviconPreview.classList.remove("d-none");
       }
+    };
+
+    const convertUrlToBase64 = (imageUrl) => {
+      return new Promise(async (resolve, reject) => {
+        try {
+          const response = await fetch(imageUrl, { signal });
+          if (!response.ok) throw new Error(`Response not OK: ${response.status}`);
+          const blob = await response.blob();
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        } catch (error) {
+          reject(error);
+        }
+      });
+    };
+
+    // --- 策略 1: 尝试使用 chrome.favicon API (Manifest V3 官方方式) ---
+    try {
+      console.log("尝试策略 1: chrome.favicon API");
+      // Chrome API 需要一个完整的 URL，而不是只有域名
+      const faviconUrl = `chrome-extension://${
+        chrome.runtime.id
+      }/_favicon/?pageUrl=${encodeURIComponent(url)}&size=64`;
+      const base64 = await convertUrlToBase64(faviconUrl);
+      setFavicon(base64);
+      console.log("策略 1 成功");
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.warn("策略 1 失败:", error);
     }
+
+    // --- 策略 2: 回退到 Google Favicon 服务 ---
+    try {
+      console.log("尝试策略 2: Google Favicon Service");
+      const googleFaviconUrl = `https://www.google.com/s2/favicons?domain=${
+        new URL(url).hostname
+      }&sz=64`;
+      const base64 = await convertUrlToBase64(googleFaviconUrl);
+      setFavicon(base64);
+      console.log("策略 2 成功");
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.warn("策略 2 失败:", error);
+    }
+
+    // --- 所有策略失败，使用默认图标 ---
+    console.log("所有策略均失败，使用默认图标");
+    setFavicon(DEFAULT_FAVICON);
   };
 
   // --- Tab Management ---
