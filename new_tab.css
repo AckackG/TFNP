@@ -106,3 +106,23 @@ body {
 #iconModal .modal-footer {
   border-color: rgba(255, 255, 255, 0.411);
 }
+
+/* --- Search Bar Styles --- */
+#search-container .btn-group .btn {
+  /* 确保按钮边框颜色与输入框一致 */
+  border-color: var(--bs-border-color);
+}
+
+/* 当按钮被选中(active)时，应用主题色，使其更醒目 */
+#search-container .btn-group .btn.active {
+  background-color: var(--bs-primary);
+  color: white;
+  border-color: var(--bs-primary);
+}
+
+#searchInput::placeholder {
+  /* 降低 placeholder 文本的不透明度，使其看起来更柔和 */
+  /* 值越小越透明，您可以根据喜好在 0.4 到 0.7 之间调整 */
+  opacity: 0.3;
+  color: currentColor; /* 继承父元素的颜色，仅调整透明度 */
+}

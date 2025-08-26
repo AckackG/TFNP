@@ -11,6 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const importFileInput = document.getElementById("importFile");
   const importWeTabBtn = document.getElementById("importWeTabBtn");
   const importWeTabFileInput = document.getElementById("importWeTabFile");
+  const searchInput = document.getElementById("searchInput");
+  const searchBtn = document.getElementById("searchBtn");
+  const googleSearchBtn = document.getElementById("googleSearchBtn");
+  const bingSearchBtn = document.getElementById("bingSearchBtn");
 
   // Modals
   const iconModalEl = document.getElementById("iconModal");
@@ -36,6 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeTabId = null;
   let sortableInstances = [];
   let faviconAbortController = null;
+  let currentSearchEngine = "google"; // 'google' or 'bing'
+  const SEARCH_ENGINES = {
+    google: "https://www.google.com/search?q=",
+    bing: "https://cn.bing.com/search?q=",
+  };
 
   const DEFAULT_FAVICON =
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktZ2xvYmUiIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZD0iTTguNSA0LjVhLjUuNSAwIDAgMC0xIDB2My41aC0zLjVhLjUuNSAwIDAgMCAwIDFoMy41VjEyaC41YS41LjUgMCAwIDAgLjUtLjV2LTMuN0g4YTguNDcgOC40NyAwIDAgMSAzLjUgMy41My5jMTMuMjQtMy41MyAzLjU0LTEzLjI0IDAgMCAuMTQxLS4yNDEtLjU3NS0uMi0xLjUtLjU0Ny0xLjA3My0uMzkxLTEuOTktLjU0My0yLjQzLS41NDNhNC45MyA0LjkyIDAgMCAwLTMuNTMgMS40N0w0LjM0NiA0LjQ4YTEwLjUgMTAuNSAwIDAgMCAuMjggMy41M2MuMjkgMS4zOTIgMS40IDMuMDY0IDMuNTQgMy4wNjQgMi4xNCAwIDMuMjUtMS42NzIgMy41NC0zLjA2NGMuMjktMS4zOS0uMDctMi45My0xLjQ4LTMuNTNoLS4xNjd6Ii8+PC9zdmc+";
@@ -92,6 +101,29 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       tabContainer.appendChild(li);
     });
+  };
+
+  // --- Search Logic ---
+  const performSearch = () => {
+    const query = searchInput.value.trim();
+    if (query) {
+      const searchUrl = SEARCH_ENGINES[currentSearchEngine] + encodeURIComponent(query);
+      // 在新标签页中打开搜索结果
+      chrome.tabs.create({ url: searchUrl });
+      // 可选：搜索后清空输入框
+      // searchInput.value = "";
+    }
+  };
+
+  const selectSearchEngine = (engine) => {
+    currentSearchEngine = engine;
+    if (engine === "google") {
+      googleSearchBtn.classList.add("active");
+      bingSearchBtn.classList.remove("active");
+    } else {
+      bingSearchBtn.classList.add("active");
+      googleSearchBtn.classList.remove("active");
+    }
   };
 
   /**
@@ -688,6 +720,20 @@ document.addEventListener("DOMContentLoaded", () => {
   importFileInput.addEventListener("change", importData);
   importWeTabBtn.addEventListener("click", () => importWeTabFileInput.click());
   importWeTabFileInput.addEventListener("change", handleWeTabImport);
+
+  // --- Search Event Listeners ---
+  searchBtn.addEventListener("click", performSearch);
+
+  searchInput.addEventListener("keydown", (event) => {
+    // 监听 Enter 键
+    if (event.key === "Enter") {
+      event.preventDefault(); // 防止任何默认的表单提交行为
+      performSearch();
+    }
+  });
+
+  googleSearchBtn.addEventListener("click", () => selectSearchEngine("google"));
+  bingSearchBtn.addEventListener("click", () => selectSearchEngine("bing"));
 
   // --- App Initialization ---
   const initializeApp = async () => {

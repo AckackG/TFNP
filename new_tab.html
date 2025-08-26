@@ -10,7 +10,42 @@
   <body>
     <header class="container-fluid py-3 mb-4 border-bottom">
       <div class="d-flex align-items-center justify-content-between">
-        <h1 class="h4 mb-0">TF导航</h1>
+        <!-- START: New Search Bar -->
+        <div class="input-group flex-grow-1 mx-3" id="search-container">
+          <!-- Search Engine Selectors -->
+          <div class="btn-group">
+            <button type="button" class="btn btn-outline-secondary active" id="googleSearchBtn">
+              GOOGLE
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="bingSearchBtn">
+              BING (CN)
+            </button>
+          </div>
+          <!-- Search Input Box -->
+          <input
+            type="search"
+            class="form-control"
+            placeholder="输入内容后按 Enter 或点击按钮搜索..."
+            id="searchInput"
+            aria-label="Search"
+          />
+          <!-- Search Button -->
+          <button class="btn btn-primary" type="button" id="searchBtn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              fill="currentColor"
+              class="bi bi-search"
+              viewBox="0 0 16 16"
+            >
+              <path
+                d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"
+              />
+            </svg>
+          </button>
+        </div>
+        <!-- END: New Search Bar -->
         <div class="d-flex align-items-center gap-2">
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="editModeSwitch" />
