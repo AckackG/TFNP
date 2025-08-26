@@ -9,6 +9,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const importBtn = document.getElementById("importBtn");
   const exportBtn = document.getElementById("exportBtn");
   const importFileInput = document.getElementById("importFile");
+  const importWeTabBtn = document.getElementById("importWeTabBtn");
+  const importWeTabFileInput = document.getElementById("importWeTabFile");
 
   // Modals
   const iconModalEl = document.getElementById("iconModal");
@@ -90,6 +92,107 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       tabContainer.appendChild(li);
     });
+  };
+
+  /**
+   * 处理从 WeTab 备份文件导入的逻辑
+   * @param {Event} event - 文件输入框的 change 事件
+   */
+  const handleWeTabImport = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!confirm("从 WeTab 导入将覆盖所有现有数据，此操作不可逆，请确认。")) {
+      importWeTabFileInput.value = ""; // 重置文件输入框
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const wetabData = JSON.parse(e.target.result);
+
+        // 验证 WeTab 数据结构
+        if (
+          !wetabData.data ||
+          !wetabData.data["store-icon"] ||
+          !Array.isArray(wetabData.data["store-icon"].icons)
+        ) {
+          throw new Error('无效的 WeTab 文件格式。未找到 "store-icon" 数据。');
+        }
+
+        // 准备一个全新的、空的数据结构
+        const newSmartNavData = {
+          version: "1.0",
+          config: { tabs: [] },
+          statistics: { iconStats: {} },
+        };
+
+        const wetabCategories = wetabData.data["store-icon"].icons;
+
+        // 辅助函数，用于递归处理图标和文件夹
+        const processWetabItem = (item, targetIconsArray, targetStatsObject) => {
+          // 如果是文件夹，则递归处理其子项
+          if (item.type === "folder-icon" && Array.isArray(item.children)) {
+            item.children.forEach((child) =>
+              processWetabItem(child, targetIconsArray, targetStatsObject)
+            );
+          }
+          // 如果是网站图标，则进行转换
+          else if (item.type === "site" && item.target) {
+            const newIconId = `icon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+            targetIconsArray.push({
+              id: newIconId,
+              name: item.name || "未命名",
+              url: item.target,
+              description: "", // WeTab 没有简介字段
+              faviconCache: item.bgImage || DEFAULT_FAVICON, // 直接使用 WeTab 的图标 URL 或默认图标
+              order: targetIconsArray.length,
+            });
+
+            // 导入统计数据
+            if (item.total > 0) {
+              targetStatsObject[newIconId] = {
+                totalClicks: item.total,
+                // WeTab 只记录最后一次点击时间，我们将其作为唯一的时间戳
+                timestamps: item.lasttime > 0 ? [item.lasttime] : [],
+              };
+            }
+          }
+        };
+
+        // 遍历 WeTab 的分类（即我们的标签页）
+        wetabCategories.forEach((category, index) => {
+          const newTab = {
+            id: `tab-${Date.now()}-${index}`,
+            name: category.name || `导入标签页 ${index + 1}`,
+            order: index,
+            icons: [],
+          };
+
+          if (Array.isArray(category.children)) {
+            category.children.forEach((item) => {
+              processWetabItem(item, newTab.icons, newSmartNavData.statistics.iconStats);
+            });
+          }
+
+          newSmartNavData.config.tabs.push(newTab);
+        });
+
+        // 转换完成，保存数据并刷新
+        appData = newSmartNavData;
+        await saveData();
+        alert("从 WeTab 导入成功！页面将刷新。");
+        location.reload();
+      } catch (error) {
+        alert(`导入失败：${error.message}`);
+        console.error("WeTab import error:", error);
+      } finally {
+        importWeTabFileInput.value = ""; // 无论成功失败，都重置文件输入框
+      }
+    };
+    reader.readAsText(file);
   };
 
   const renderTabContents = () => {
@@ -566,6 +669,8 @@ document.addEventListener("DOMContentLoaded", () => {
   exportBtn.addEventListener("click", exportData);
   importBtn.addEventListener("click", () => importFileInput.click());
   importFileInput.addEventListener("change", importData);
+  importWeTabBtn.addEventListener("click", () => importWeTabFileInput.click());
+  importWeTabFileInput.addEventListener("change", handleWeTabImport);
 
   // --- App Initialization ---
   const initializeApp = async () => {
