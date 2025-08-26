@@ -317,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
           alert("必须至少保留一个标签页。");
           return;
         }
-        if (confirm(`确定要删除标签页 ${tab.name} 吗？此标签页下的所有网站也将被删除。`)) {
+        if (confirm(`确定要删除标签页吗？此标签页下的所有网站也将被删除。`)) {
           const tabId = e.currentTarget.dataset.tabId;
           appData.config.tabs = appData.config.tabs.filter((t) => t.id !== tabId);
           if (activeTabId === tabId) {
