@@ -2,7 +2,7 @@
 
 body {
   min-height: 100vh;
-  background-color: #212529; /* Dark theme background */
+  background-color: #2f343a; /* Dark theme background */
 }
 
 .icon-grid {
@@ -18,7 +18,8 @@ body {
   justify-content: center;
   padding: 15px;
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.05);
+  /* --- MODIFIED: Made the background lighter --- */
+  background-color: rgba(255, 255, 255, 0.295);
   text-decoration: none;
   color: #f8f9fa;
   transition: transform 0.2s ease, background-color 0.2s ease;
@@ -28,7 +29,8 @@ body {
 
 .icon-item:hover {
   transform: translateY(-5px);
-  background-color: rgba(255, 255, 255, 0.1);
+  /* --- MODIFIED: Made the hover background even lighter to maintain contrast --- */
+  background-color: rgba(255, 255, 255, 0.397);
   color: #fff;
 }
 
@@ -84,4 +86,23 @@ body {
   width: 24px;
   height: 24px;
   margin-right: 10px;
+}
+
+/* --- MODIFICATION: Adjust Modal Background Color --- */
+
+/* 
+  Targets the main content area of the icon add/edit modal.
+  #343a40 is a standard Bootstrap dark gray, slightly lighter than the body background.
+*/
+#iconModal .modal-content {
+  background-color: #53575c;
+}
+
+/* 
+  Optional: Adjust the border color of the modal's header and footer 
+  to maintain good contrast with the new background.
+*/
+#iconModal .modal-header,
+#iconModal .modal-footer {
+  border-color: rgba(255, 255, 255, 0.411);
 }
