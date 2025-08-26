@@ -54,3 +54,10 @@ A: 当然！本扩展基于 Chromium 内核开发，因此完美支持 **Google 
 *   [SortableJS](https://github.com/SortableJS/Sortable)
 
 ---
+## 更新计划
+
+- [] 搜索时用AI分析保存的网站、收藏夹内的网站，在新页面给出结果
+- [] 批量一键用多个搜索引擎搜索结果
+- [] 图标颜色 + 数据保存
+- [] TAB重排序
+- [] 图标批量转移到其他TAB
