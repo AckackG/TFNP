@@ -214,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
         item.dataset.iconId = icon.id;
         item.dataset.bsToggle = "tooltip";
         item.dataset.bsPlacement = "bottom";
-        item.title = icon.description || icon.name;
+        item.title = icon.description || icon.url;
         item.innerHTML = `
                 <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
                 <span class="icon-item-name">${icon.name}</span>
