@@ -12,6 +12,9 @@
     "storage",
     "favicon"
   ],
+  "host_permissions": [
+        "https://favicone.com/*"
+      ],
   "chrome_url_overrides": {
     "newtab": "new_tab.html"
   },
