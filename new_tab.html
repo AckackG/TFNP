@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>新标签页</title>
+    <title>TF 新标签页</title>
     <link rel="stylesheet" href="lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" href="new_tab.css" />
   </head>
   <body>
     <header class="container-fluid py-3 mb-4 border-bottom">
       <div class="d-flex align-items-center justify-content-between">
-        <h1 class="h4 mb-0">智能导航</h1>
+        <h1 class="h4 mb-0">TF导航</h1>
         <div class="d-flex align-items-center gap-2">
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="editModeSwitch" />
@@ -62,12 +62,12 @@
               <li><button class="dropdown-item" id="showStatsBtn">查看统计报告</button></li>
               <li><hr class="dropdown-divider" /></li>
               <li><button class="dropdown-item" id="importBtn">导入数据</button></li>
-              <li><button class="dropdown-item" id="importWeTabBtn">从 WeTab 导入</button></li>
-              <!-- 添加此行 -->
               <li><button class="dropdown-item" id="exportBtn">导出数据</button></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li><button class="dropdown-item" id="importWeTabBtn">从 WeTab 导入数据</button></li>
             </ul>
             <input type="file" id="importFile" accept=".json" style="display: none" />
-            <input type="file" id="importWeTabFile" accept=".json" style="display: none" />
+            <input type="file" id="importWeTabFile" accept=".data" style="display: none" />
             <!-- 添加此行 -->
           </div>
         </div>

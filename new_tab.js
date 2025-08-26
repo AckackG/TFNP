@@ -216,20 +216,37 @@ document.addEventListener("DOMContentLoaded", () => {
         item.dataset.bsPlacement = "bottom";
         item.title = icon.description || icon.name;
         item.innerHTML = `
-                    <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
-                    <span class="icon-item-name">${icon.name}</span>
-                `;
+                <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
+                <span class="icon-item-name">${icon.name}</span>
+            `;
+
+        // 监听左键点击
         item.addEventListener("click", (e) => {
-          if (!editModeSwitch.checked) {
-            recordClick(icon.id);
+          if (editModeSwitch.checked) {
+            e.preventDefault(); // 在编辑模式下阻止跳转
           } else {
-            e.preventDefault();
+            recordClick(icon.id); // 正常记录点击
           }
         });
+
+        // --- NEW: Handle middle-mouse click ---
+        // 监听中键点击 (auxclick 事件)
+        item.addEventListener("auxclick", (e) => {
+          // 确保是鼠标中键 (button === 1)
+          if (e.button === 1 && !editModeSwitch.checked) {
+            e.preventDefault(); // 阻止浏览器默认的“在新标签页打开”行为
+            recordClick(icon.id); // 记录点击次数
+            chrome.tabs.create({ url: icon.url, active: false }); // 在新窗口中打开链接
+          }
+        });
+        // --- END NEW ---
+
+        // 监听右键点击
         item.addEventListener("contextmenu", (e) => {
           e.preventDefault();
           showEditIconModal(icon.id, tab.id);
         });
+
         grid.appendChild(item);
       });
       pane.appendChild(grid);
