@@ -69,6 +69,7 @@ export const showAddIconModal = () => {
   DOM.iconIdInput.value = "";
   DOM.iconModalLabel.textContent = "添加新网站";
   DOM.deleteIconBtn.classList.add("d-none");
+  DOM.moveIconContainer.classList.add("d-none");
   DOM.faviconPreview.classList.add("d-none");
   DOM.faviconSpinner.classList.add("d-none");
 
@@ -97,6 +98,9 @@ export const showEditIconModal = (iconId, tabId) => {
     DOM.faviconPreview.classList.remove("d-none");
     DOM.faviconSpinner.classList.add("d-none");
     DOM.deleteIconBtn.classList.remove("d-none");
+    DOM.moveIconContainer.classList.remove("d-none");
+    DOM.moveIconBtn.dataset.iconId = iconId;
+    DOM.moveIconBtn.dataset.sourceTabId = tabId;
 
     // Set border color selection
     const color = icon.borderColor || "transparent";
@@ -169,6 +173,38 @@ export const handleDeleteIcon = async () => {
     await saveData();
     render();
     DOM.iconModal.hide();
+  }
+};
+
+export const moveIconToTab = async (iconId, sourceTabId, targetTabId) => {
+  const sourceTab = state.appData.config.tabs.find((t) => t.id === sourceTabId);
+  const targetTab = state.appData.config.tabs.find((t) => t.id === targetTabId);
+
+  if (!sourceTab || !targetTab || sourceTabId === targetTabId) {
+    console.error("Invalid move operation:", { sourceTabId, targetTabId });
+    return;
+  }
+
+  const iconIndex = sourceTab.icons.findIndex((i) => i.id === iconId);
+
+  if (iconIndex > -1) {
+    // Remove from source
+    const [movedIcon] = sourceTab.icons.splice(iconIndex, 1);
+
+    // Add to target
+    movedIcon.order = targetTab.icons.length;
+    targetTab.icons.push(movedIcon);
+
+    // Re-order source tab icons
+    sourceTab.icons.forEach((icon, index) => {
+      icon.order = index;
+    });
+
+    await saveData();
+    render();
+    DOM.iconModal.hide();
+  } else {
+    console.error("Icon to move not found in source tab.");
   }
 };
 

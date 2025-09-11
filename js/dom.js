@@ -41,6 +41,9 @@ export const faviconPreview = document.getElementById("faviconPreview");
 export const faviconSpinner = document.getElementById("faviconSpinner");
 export const deleteIconBtn = document.getElementById("deleteIconBtn");
 export const borderColorSelector = document.getElementById("borderColorSelector");
+export const moveIconContainer = document.getElementById("moveIconContainer");
+export const moveIconBtn = document.getElementById("moveIconBtn");
+export const moveIconTabsList = document.getElementById("moveIconTabsList");
 
 // Tab Management Modal elements
 export const tabManagementList = document.getElementById("tab-management-list");

@@ -52,7 +52,7 @@
         <div class="d-flex align-items-center gap-2">
           <div class="form-check form-switch">
             <input class="form-check-input" type="checkbox" role="switch" id="editModeSwitch" />
-            <label class="form-check-label" for="editModeSwitch">编辑模式</label>
+            <label class="form-check-label" for="editModeSwitch">拖拽图标</label>
           </div>
           <button
             class="btn btn-sm btn-primary"
@@ -187,7 +187,19 @@
             </form>
           </div>
           <div class="modal-footer justify-content-between">
-            <button type="button" class="btn btn-danger" id="deleteIconBtn">删除</button>
+            <div class="d-flex gap-2">
+              <button type="button" class="btn btn-danger" id="deleteIconBtn">删除</button>
+              <div class="position-relative" id="moveIconContainer">
+                <button type="button" class="btn btn-info" id="moveIconBtn">移动标签页</button>
+                <div
+                  class="list-group position-absolute bottom-100 mb-2 d-none"
+                  id="moveIconTabsList"
+                  style="z-index: 1060; min-width: 150px"
+                >
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
             <div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
               <button type="submit" class="btn btn-primary" form="iconForm">保存</button>
@@ -273,4 +285,3 @@
     <script type="module" src="js/main.js"></script>
   </body>
 </html>
-```

@@ -58,6 +58,47 @@ const setupEventListeners = () => {
     }
   });
 
+  // Move Icon Logic
+  DOM.moveIconBtn.addEventListener("mouseenter", () => {
+    const sourceTabId = DOM.moveIconBtn.dataset.sourceTabId;
+    const otherTabs = state.appData.config.tabs.filter((t) => t.id !== sourceTabId);
+
+    DOM.moveIconTabsList.innerHTML = ""; // Clear previous list
+
+    if (otherTabs.length > 0) {
+      otherTabs.sort((a, b) => a.order - b.order);
+      otherTabs.forEach((tab) => {
+        const item = document.createElement("a");
+        item.href = "#";
+        item.className = "list-group-item list-group-item-action";
+        item.dataset.tabId = tab.id;
+        item.textContent = tab.name;
+        DOM.moveIconTabsList.appendChild(item);
+      });
+      DOM.moveIconTabsList.classList.remove("d-none");
+    }
+  });
+
+  // Hide move tabs list when clicking away
+  document.addEventListener("click", (e) => {
+    if (!DOM.moveIconTabsList.classList.contains("d-none")) {
+      if (!DOM.moveIconContainer.contains(e.target)) {
+        DOM.moveIconTabsList.classList.add("d-none");
+      }
+    }
+  });
+
+  // Handle clicking on a tab in the move list
+  DOM.moveIconTabsList.addEventListener("click", (e) => {
+    e.preventDefault();
+    const targetTabItem = e.target.closest(".list-group-item");
+    if (targetTabItem) {
+      const targetTabId = targetTabItem.dataset.tabId;
+      const { iconId, sourceTabId } = DOM.moveIconBtn.dataset;
+      Handlers.moveIconToTab(iconId, sourceTabId, targetTabId);
+    }
+  });
+
   // Tab Management Modal
   DOM.addTabBtn.addEventListener("click", Handlers.handleAddTab);
 
