@@ -173,16 +173,26 @@ export const handleDeleteIcon = async () => {
 };
 
 // --- Tab Management ---
+let tabManagementSortable = null;
+
 export const renderTabManagementList = () => {
+  if (tabManagementSortable) {
+    tabManagementSortable.destroy();
+  }
+
   const list = DOM.tabManagementList;
   list.innerHTML = "";
+  state.appData.config.tabs.sort((a, b) => a.order - b.order);
   state.appData.config.tabs.forEach((tab) => {
     const item = document.createElement("li");
     item.className =
       "list-group-item d-flex justify-content-between align-items-center tab-management-item";
     item.innerHTML = `
-              <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}">
-              <button class="btn btn-sm btn-outline-danger" data-tab-id="${tab.id}">
+              <div class="d-flex align-items-center flex-grow-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grip-vertical me-2" viewBox="0 0 16 16" style="cursor: grab;"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                  <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}">
+              </div>
+              <button class="btn btn-sm btn-outline-danger ms-2" data-tab-id="${tab.id}">
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
               </button>
           `;
@@ -219,6 +229,25 @@ export const renderTabManagementList = () => {
       }
     });
     list.appendChild(item);
+  });
+
+  tabManagementSortable = new Sortable(list, {
+    animation: 150,
+    ghostClass: "sortable-ghost",
+    handle: ".bi-grip-vertical",
+    onEnd: async (evt) => {
+      // Reorder the array in the state
+      const movedItem = state.appData.config.tabs.splice(evt.oldIndex, 1)[0];
+      state.appData.config.tabs.splice(evt.newIndex, 0, movedItem);
+
+      // Update the 'order' property for all tabs
+      state.appData.config.tabs.forEach((tab, index) => {
+        tab.order = index;
+      });
+
+      await saveData();
+      render(); // Re-render the main UI to reflect the new tab order
+    },
   });
 };
 
