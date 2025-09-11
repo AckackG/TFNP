@@ -47,8 +47,10 @@ const setupEventListeners = () => {
   DOM.urlInput.addEventListener("blur", () => {
     if (DOM.urlInput.value) {
       try {
-        new URL(DOM.urlInput.value); // Basic validation
-        fetchFavicon(DOM.urlInput.value);
+        // Basic validation, doesn't need to be a full URL object
+        if (DOM.urlInput.value.includes(".")) {
+          fetchFavicon(DOM.urlInput.value);
+        }
       } catch (e) {
         // Invalid URL, do nothing
       }
@@ -91,7 +93,7 @@ const setupEventListeners = () => {
     if (e.button === 1 && !DOM.editModeSwitch.checked) {
       e.preventDefault();
       Handlers.recordClick(iconItem.dataset.iconId);
-      chrome.tabs.create({ url: iconItem.href, active: false });
+      window.open(iconItem.href, "_blank");
     }
   });
 
@@ -108,6 +110,7 @@ const setupEventListeners = () => {
 // --- App Initialization ---
 const initializeApp = async () => {
   await loadData();
+  Handlers.initializeModalUIs(); // Initialize dynamic UI elements in modals
   render();
   setupEventListeners();
 };

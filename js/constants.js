@@ -2,5 +2,19 @@ export const SEARCH_ENGINES = {
   google: "https://www.google.com/search?q=",
   bing: "https://cn.bing.com/search?q=",
 };
-export const DEFAULT_FAVICON =
-  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNiIgaGVpZ2h0PSIxNiIgZmlsbD0iY3VycmVudENvbG9yIiBjbGFzcz0iYmkgYmktZ2xvYmUiIHZpZXdCb3g9IjAgMCAxNiAxNiI+PHBhdGggZD0iTTguNSA0LjVhLjUuNSAwIDAgMC0xIDB2My41aC0zLjVhLjUuNSAwIDAgMCAwIDFoMy41VjEyaC41YS41LjUgMCAwIDAgLjUtLjV2LTMuN0g4YTguNDcgOC40NyAwIDAgMSAzLjUgMy41My5jMTMuMjQtMy41MyAzLjU0LTEzLjI0IDAgMCAuMTQxLS4yNDEtLjU3NS0uMi0xLjUtLjU0Ny0xLjA3My0uMzkxLTEuOTktLjU0My0yLjQzLS41NDNhNC45MyA0LjkyIDAgMCAwLTMuNTMgMS40N0w0LjM0NiA0LjQ4YTEwLjUgMTAuNSAwIDAgMCAuMjggMy41M2MuMjkgMS4zOTIgMS40IDMuMDY0IDMuNTQgMy4wNjQgMi4xNCAwIDMuMjUtMS42NzIgMy41NC0zLjA2NGMuMjktMS4zOS0uMDctMi45My0xLjQ4LTMuNTNoLS4xNjd6Ii8+PC9zdmc+";
+
+// 使用本地图标以减小数据体积
+export const DEFAULT_FAVICON = "icons/icon_def.PNG";
+
+// 边框颜色选项 (第一个为透明)
+export const BORDER_COLORS = [
+  "transparent",
+  "#FF5733", // 橙红色
+  "#33FF57", // 亮绿色
+  "#3357FF", // 宝蓝色
+  "#FF33A1", // 亮粉色
+  "#F1C40F", // 黄色
+  "#33FFF3", // 青色
+  "#9B59B6", // 紫色
+  "#E67E22", // 胡萝卜橙
+];

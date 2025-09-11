@@ -2,14 +2,52 @@ import * as DOM from "./dom.js";
 import { state, saveData } from "./state.js";
 import { render } from "./ui.js";
 import { fetchFavicon } from "./utils.js";
-import { SEARCH_ENGINES, DEFAULT_FAVICON } from "./constants.js";
+import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
+
+// --- UI Initialization ---
+export const initializeModalUIs = () => {
+  // Initialize Border Color Selector
+  const container = DOM.borderColorSelector;
+  if (container.children.length === 0) {
+    // Only build once
+    BORDER_COLORS.forEach((color) => {
+      const option = document.createElement("div");
+      option.className = "color-option";
+      option.dataset.color = color;
+      if (color !== "transparent") {
+        option.style.backgroundColor = color;
+      }
+      container.appendChild(option);
+    });
+
+    container.addEventListener("click", (e) => {
+      const target = e.target;
+      if (target.classList.contains("color-option")) {
+        container.querySelector(".selected")?.classList.remove("selected");
+        target.classList.add("selected");
+        const selectedColor = target.dataset.color;
+        if (selectedColor !== "transparent") {
+          DOM.faviconPreview.style.border = `3px solid ${selectedColor}`;
+          DOM.faviconPreview.style.borderRadius = "8px";
+          DOM.faviconPreview.style.padding = "2px";
+          DOM.faviconPreview.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+        } else {
+          DOM.faviconPreview.style.border = "none";
+          DOM.faviconPreview.style.borderRadius = "";
+          DOM.faviconPreview.style.padding = "";
+          DOM.faviconPreview.style.backgroundColor = "";
+        }
+      }
+    });
+  }
+};
 
 // --- Search Logic ---
 export const performSearch = () => {
   const query = DOM.searchInput.value.trim();
   if (query) {
     const searchUrl = SEARCH_ENGINES[state.currentSearchEngine] + encodeURIComponent(query);
-    chrome.tabs.create({ url: searchUrl });
+    window.open(searchUrl, "_blank");
   }
 };
 
@@ -32,6 +70,15 @@ export const showAddIconModal = () => {
   DOM.deleteIconBtn.classList.add("d-none");
   DOM.faviconPreview.classList.add("d-none");
   DOM.faviconSpinner.classList.add("d-none");
+
+  // Reset border color selection
+  DOM.borderColorSelector.querySelector(".selected")?.classList.remove("selected");
+  DOM.borderColorSelector.querySelector('[data-color="transparent"]').classList.add("selected");
+  DOM.faviconPreview.style.border = "none";
+  DOM.faviconPreview.style.borderRadius = "";
+  DOM.faviconPreview.style.padding = "";
+  DOM.faviconPreview.style.backgroundColor = "";
+
   DOM.iconModal.show();
 };
 
@@ -49,6 +96,23 @@ export const showEditIconModal = (iconId, tabId) => {
     DOM.faviconPreview.classList.remove("d-none");
     DOM.faviconSpinner.classList.add("d-none");
     DOM.deleteIconBtn.classList.remove("d-none");
+
+    // Set border color selection
+    const color = icon.borderColor || "transparent";
+    DOM.borderColorSelector.querySelector(".selected")?.classList.remove("selected");
+    DOM.borderColorSelector.querySelector(`[data-color="${color}"]`).classList.add("selected");
+    if (color !== "transparent") {
+      DOM.faviconPreview.style.border = `3px solid ${color}`;
+      DOM.faviconPreview.style.borderRadius = "8px";
+      DOM.faviconPreview.style.padding = "2px";
+      DOM.faviconPreview.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+    } else {
+      DOM.faviconPreview.style.border = "none";
+      DOM.faviconPreview.style.borderRadius = "";
+      DOM.faviconPreview.style.padding = "";
+      DOM.faviconPreview.style.backgroundColor = "";
+    }
+
     DOM.iconModal.show();
   }
 };
@@ -63,16 +127,22 @@ export const handleIconFormSubmit = async (e) => {
   const name = DOM.nameInput.value;
   const description = DOM.descriptionInput.value;
   const tab = state.appData.config.tabs.find((t) => t.id === state.activeTabId);
+
   let faviconCache = DOM.faviconPreview.src;
-  if (DOM.faviconPreview.classList.contains("d-none") || DOM.faviconPreview.src.endsWith("/")) {
+  if (DOM.faviconPreview.classList.contains("d-none") || !faviconCache) {
     faviconCache = DEFAULT_FAVICON;
   }
+
+  const selectedColorEl = DOM.borderColorSelector.querySelector(".selected");
+  const borderColor = selectedColorEl ? selectedColorEl.dataset.color : "transparent";
+
   if (id) {
     const icon = tab.icons.find((i) => i.id === id);
     icon.url = url;
     icon.name = name;
     icon.description = description;
     icon.faviconCache = faviconCache;
+    icon.borderColor = borderColor;
   } else {
     tab.icons.push({
       id: `icon-${Date.now()}`,
@@ -80,6 +150,7 @@ export const handleIconFormSubmit = async (e) => {
       name,
       description,
       faviconCache,
+      borderColor,
       order: tab.icons.length,
     });
   }
@@ -350,6 +421,7 @@ export const handleWeTabImport = (event) => {
             url: item.target,
             description: "", // WeTab 没有简介字段
             faviconCache: item.bgImage || DEFAULT_FAVICON, // 直接使用 WeTab 的图标 URL 或默认图标
+            borderColor: "transparent", // 添加默认边框颜色
             order: targetIconsArray.length,
           });
 

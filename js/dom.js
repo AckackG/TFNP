@@ -39,6 +39,7 @@ export const descriptionInput = document.getElementById("descriptionInput");
 export const faviconPreview = document.getElementById("faviconPreview");
 export const faviconSpinner = document.getElementById("faviconSpinner");
 export const deleteIconBtn = document.getElementById("deleteIconBtn");
+export const borderColorSelector = document.getElementById("borderColorSelector");
 
 // Tab Management Modal elements
 export const tabManagementList = document.getElementById("tab-management-list");

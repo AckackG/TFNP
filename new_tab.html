@@ -158,13 +158,21 @@
                   src=""
                   alt="Favicon"
                   class="d-none"
-                  width="32"
-                  height="32"
+                  width="40"
+                  height="40"
                 />
                 <div class="spinner-border text-primary d-none" role="status" id="faviconSpinner">
                   <span class="visually-hidden">Loading...</span>
                 </div>
               </div>
+              <!-- START: Border Color Selector -->
+              <div class="mb-3">
+                <label class="form-label">边框颜色</label>
+                <div id="borderColorSelector" class="d-flex flex-wrap justify-content-center gap-2">
+                  <!-- Color options will be inserted here by JS -->
+                </div>
+              </div>
+              <!-- END: Border Color Selector -->
               <div class="mb-3">
                 <label for="nameInput" class="form-label">名称</label>
                 <input type="text" class="form-control" id="nameInput" required />

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "智能导航首页 (Smart Navigation Homepage)",
-  "version": "1.0",
+  "version": "1.1",
   "description": "一个高度可定制、美观且高效的网站快速启动器。",
   "icons": {
     "16": "icons/icon16.png",
@@ -13,8 +13,8 @@
     "favicon"
   ],
   "host_permissions": [
-        "https://favicone.com/*"
-      ],
+    "https://favicone.com/*"
+  ],
   "chrome_url_overrides": {
     "newtab": "new_tab.html"
   },
@@ -27,5 +27,15 @@
       "48": "icons/icon48.png"
     },
     "default_title": "智能导航首页"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "icons/icon_def.PNG"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ]
 }

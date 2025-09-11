@@ -47,9 +47,18 @@ export const renderTabContents = () => {
       item.dataset.bsPlacement = "bottom";
       item.title = icon.description || icon.url;
       item.innerHTML = `
-              <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
+              <div class="icon-image-wrapper">
+                <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
+              </div>
               <span class="icon-item-name">${icon.name}</span>
           `;
+
+      // Apply border color if it exists and is not transparent
+      if (icon.borderColor && icon.borderColor !== "transparent") {
+        const wrapper = item.querySelector(".icon-image-wrapper");
+        wrapper.style.borderColor = icon.borderColor;
+      }
+
       grid.appendChild(item);
     });
     pane.appendChild(grid);
