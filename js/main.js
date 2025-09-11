@@ -1,6 +1,6 @@
 import * as DOM from "./dom.js";
 import { state, loadData } from "./state.js";
-import { render, renderTabs, renderTabContents } from "./ui.js";
+import { render } from "./ui.js";
 import * as Handlers from "./handlers.js";
 import { fetchFavicon } from "./utils.js";
 
@@ -109,9 +109,8 @@ const setupEventListeners = () => {
     const tabButton = e.target.closest("button[data-tab-id]");
     if (tabButton) {
       state.activeTabId = tabButton.dataset.tabId;
-      // Re-render only the tabs and content, not everything
-      renderTabs();
-      renderTabContents();
+      // Call the main render function to ensure everything, including SortableJS, is re-initialized.
+      render();
     }
   });
 
