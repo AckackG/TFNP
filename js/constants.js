@@ -4,7 +4,7 @@ export const SEARCH_ENGINES = {
 };
 
 // 使用本地图标以减小数据体积
-export const DEFAULT_FAVICON = "icons/icon_def.PNG";
+export const DEFAULT_FAVICON = "icons/icon16.PNG";
 
 // 边框颜色选项 (第一个为透明)
 export const BORDER_COLORS = [
