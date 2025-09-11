@@ -1,5 +1,5 @@
 import * as DOM from "./dom.js";
-import { state, saveData } from "./state.js";
+import { state, saveData, saveSearchEnginePreference } from "./state.js";
 import { render } from "./ui.js";
 import { fetchFavicon } from "./utils.js";
 import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
@@ -51,15 +51,16 @@ export const performSearch = () => {
   }
 };
 
+export const updateSearchEngineUI = (engine) => {
+  DOM.googleSearchBtn.classList.toggle("active", engine === "google");
+  DOM.bingSearchBtn.classList.toggle("active", engine === "bing");
+  DOM.sogouSearchBtn.classList.toggle("active", engine === "sogou");
+};
+
 export const selectSearchEngine = (engine) => {
   state.currentSearchEngine = engine;
-  if (engine === "google") {
-    DOM.googleSearchBtn.classList.add("active");
-    DOM.bingSearchBtn.classList.remove("active");
-  } else {
-    DOM.bingSearchBtn.classList.add("active");
-    DOM.googleSearchBtn.classList.remove("active");
-  }
+  updateSearchEngineUI(engine);
+  saveSearchEnginePreference();
 };
 
 // --- Icon CRUD ---

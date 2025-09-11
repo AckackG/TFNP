@@ -4,11 +4,13 @@ export const state = {
   activeTabId: null,
   sortableInstances: [],
   faviconAbortController: null,
-  currentSearchEngine: "google", // 'google' or 'bing'
+  currentSearchEngine: "google", // 'google', 'bing', or 'sogou'
 };
 
 export const loadData = async () => {
-  const result = await chrome.storage.local.get("smartNavData");
+  const result = await chrome.storage.local.get(["smartNavData", "searchEngine"]);
+
+  // Handle main app data
   if (result.smartNavData) {
     state.appData = result.smartNavData;
     // Ensure new stats structure exists for backward compatibility
@@ -27,8 +29,17 @@ export const loadData = async () => {
     state.activeTabId = state.appData.config.tabs[0].id;
     await saveData();
   }
+
+  // Handle search engine preference
+  if (result.searchEngine) {
+    state.currentSearchEngine = result.searchEngine;
+  }
 };
 
 export const saveData = async () => {
   await chrome.storage.local.set({ smartNavData: state.appData });
+};
+
+export const saveSearchEnginePreference = async () => {
+  await chrome.storage.local.set({ searchEngine: state.currentSearchEngine });
 };

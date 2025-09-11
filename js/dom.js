@@ -20,6 +20,7 @@ export const searchInput = document.getElementById("searchInput");
 export const searchBtn = document.getElementById("searchBtn");
 export const googleSearchBtn = document.getElementById("googleSearchBtn");
 export const bingSearchBtn = document.getElementById("bingSearchBtn");
+export const sogouSearchBtn = document.getElementById("sogouSearchBtn");
 
 // Modals
 export const iconModalEl = document.getElementById("iconModal");

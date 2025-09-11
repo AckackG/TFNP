@@ -40,6 +40,7 @@ const setupEventListeners = () => {
   });
   DOM.googleSearchBtn.addEventListener("click", () => Handlers.selectSearchEngine("google"));
   DOM.bingSearchBtn.addEventListener("click", () => Handlers.selectSearchEngine("bing"));
+  DOM.sogouSearchBtn.addEventListener("click", () => Handlers.selectSearchEngine("sogou"));
 
   // Icon Modal
   DOM.iconForm.addEventListener("submit", Handlers.handleIconFormSubmit);
@@ -110,6 +111,7 @@ const setupEventListeners = () => {
 // --- App Initialization ---
 const initializeApp = async () => {
   await loadData();
+  Handlers.updateSearchEngineUI(state.currentSearchEngine); // Set initial search engine UI
   Handlers.initializeModalUIs(); // Initialize dynamic UI elements in modals
   render();
   setupEventListeners();

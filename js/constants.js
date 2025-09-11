@@ -1,6 +1,7 @@
 export const SEARCH_ENGINES = {
   google: "https://www.google.com/search?q=",
   bing: "https://cn.bing.com/search?q=",
+  sogou: "https://www.sogou.com/web?query=",
 };
 
 // 使用本地图标以减小数据体积
