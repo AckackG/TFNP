@@ -1,5 +1,3 @@
-/* new_tab.css */
-
 body {
   min-height: 100vh;
   background-color: #2f343a; /* Dark theme background */
@@ -148,6 +146,11 @@ body {
   font-size: 0.8rem;
   color: #adb5bd;
   word-break: break-all;
+}
+
+/* Make placeholder text in search results less prominent */
+.website-search-placeholder {
+  opacity: 0.6;
 }
 /* --- END: Website Search Results Styles --- */
 

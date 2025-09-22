@@ -379,7 +379,7 @@ export const generateReport = () => {
 export const showWebsiteSearchModal = () => {
   DOM.websiteSearchInput.value = "";
   DOM.websiteSearchResults.innerHTML =
-    '<li class="list-group-item text-muted">请输入关键词进行搜索...</li>';
+    '<li class="list-group-item text-muted website-search-placeholder">请输入关键词进行搜索...</li>';
   DOM.websiteSearchModal.show();
   // The 'shown.bs.modal' event is used to ensure the modal is fully visible before focusing.
   DOM.websiteSearchModalEl.addEventListener(
@@ -397,7 +397,8 @@ export const performWebsiteSearch = () => {
   resultsList.innerHTML = "";
 
   if (!query) {
-    resultsList.innerHTML = '<li class="list-group-item text-muted">请输入关键词进行搜索...</li>';
+    resultsList.innerHTML =
+      '<li class="list-group-item text-muted website-search-placeholder">请输入关键词进行搜索...</li>';
     return;
   }
 
@@ -410,7 +411,8 @@ export const performWebsiteSearch = () => {
   );
 
   if (filteredIcons.length === 0) {
-    resultsList.innerHTML = '<li class="list-group-item">未找到匹配的网站</li>';
+    resultsList.innerHTML =
+      '<li class="list-group-item text-muted website-search-placeholder">未找到匹配的网站</li>';
     return;
   }
 
@@ -432,11 +434,21 @@ export const performWebsiteSearch = () => {
           <div class="website-url text-truncate">${icon.url}</div>
       </div>
     `;
+    // Handle left-click
     item.addEventListener("click", (e) => {
-      // We only record the click, the default action (opening the link) will proceed.
       recordClick(icon.id);
       DOM.websiteSearchModal.hide();
     });
+
+    // Handle middle-click
+    item.addEventListener("auxclick", (e) => {
+      if (e.button === 1) {
+        // Middle mouse button
+        recordClick(icon.id);
+        // No need to hide modal, user is likely in a new tab
+      }
+    });
+
     resultsList.appendChild(item);
   });
 };
