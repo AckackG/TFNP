@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "智能导航首页 (Smart Navigation Homepage)",
-  "version": "1.11",
-  "description": "一个高度可定制、美观且高效的网站快速启动器。",
+  "name": "Turfia 的导航首页 (Turfia's New Homepage)",
+  "version": "1.2",
+  "description": "无联网功能的标签页",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -26,7 +26,7 @@
       "16": "icons/icon16.png",
       "48": "icons/icon48.png"
     },
-    "default_title": "智能导航首页"
+    "default_title": "TFNP"
   },
   "web_accessible_resources": [
     {
