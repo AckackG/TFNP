@@ -54,3 +54,10 @@ export const newTabNameInput = document.getElementById("newTabNameInput");
 export const globalStatsList = document.getElementById("globalStatsList");
 export const statsTabSelect = document.getElementById("statsTabSelect");
 export const tabStatsList = document.getElementById("tabStatsList");
+
+// Website Search Modal elements
+export const websiteSearchBtn = document.getElementById("websiteSearchBtn");
+export const websiteSearchModalEl = document.getElementById("websiteSearchModal");
+export const websiteSearchModal = new bootstrap.Modal(websiteSearchModalEl);
+export const websiteSearchInput = document.getElementById("websiteSearchInput");
+export const websiteSearchResults = document.getElementById("websiteSearchResults");

@@ -136,19 +136,34 @@ body {
   margin-right: 10px;
 }
 
+/* --- START: Website Search Results Styles --- */
+.website-search-item img {
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  object-fit: contain;
+}
+
+.website-search-item .website-url {
+  font-size: 0.8rem;
+  color: #adb5bd;
+  word-break: break-all;
+}
+/* --- END: Website Search Results Styles --- */
+
 /* --- MODIFICATION: Adjust Modal Background Color --- */
 
-/* 
-  Targets the main content area of the icon add/edit modal.
-  #343a40 is a standard Bootstrap dark gray, slightly lighter than the body background.
+/*
+Targets the main content area of the icon add/edit modal.
+#343a40 is a standard Bootstrap dark gray, slightly lighter than the body background.
 */
 #iconModal .modal-content {
   background-color: #53575c;
 }
 
-/* 
-  Optional: Adjust the border color of the modal's header and footer 
-  to maintain good contrast with the new background.
+/*
+Optional: Adjust the border color of the modal's header and footer
+to maintain good contrast with the new background.
 */
 #iconModal .modal-header,
 #iconModal .modal-footer {

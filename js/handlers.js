@@ -223,15 +223,7 @@ export const renderTabManagementList = () => {
     const item = document.createElement("li");
     item.className =
       "list-group-item d-flex justify-content-between align-items-center tab-management-item";
-    item.innerHTML = `
-              <div class="d-flex align-items-center flex-grow-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grip-vertical me-2" viewBox="0 0 16 16" style="cursor: grab;"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
-                  <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}">
-              </div>
-              <button class="btn btn-sm btn-outline-danger ms-2" data-tab-id="${tab.id}">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-              </button>
-          `;
+    item.innerHTML = `<div class="d-flex align-items-center flex-grow-1"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grip-vertical me-2" viewBox="0 0 16 16" style="cursor: grab;"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg> <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}"> </div> <button class="btn btn-sm btn-outline-danger ms-2" data-tab-id="${tab.id}"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg> </button>`;
     item.querySelector("input").addEventListener("change", async (e) => {
       const tabId = e.target.dataset.tabId;
       const newName = e.target.value.trim();
@@ -327,14 +319,11 @@ const renderStatsList = (listElement, data) => {
     const li = document.createElement("li");
     li.className =
       "list-group-item d-flex justify-content-between align-items-center stats-list-item";
-    li.innerHTML = `
-              <div>
-                  <span class="me-2">${index + 1}.</span>
-                  <img src="${item.faviconCache || DEFAULT_FAVICON}" alt="${item.name}">
-                  <span>${item.name}</span>
-              </div>
-              <span class="badge bg-primary rounded-pill">${item.count}</span>
-          `;
+    li.innerHTML = `<div> <span class="me-2">${index + 1}.</span> <img src="${
+      item.faviconCache || DEFAULT_FAVICON
+    }" alt="${item.name}"> <span>${
+      item.name
+    }</span> </div> <span class="badge bg-primary rounded-pill">${item.count}</span>`;
     listElement.appendChild(li);
   });
 };
@@ -383,6 +372,73 @@ export const generateReport = () => {
   DOM.statsTabSelect.removeEventListener("change", updateTabStats); // Avoid duplicate listeners
   DOM.statsTabSelect.addEventListener("change", updateTabStats);
   updateTabStats();
+};
+
+// --- Website Search ---
+
+export const showWebsiteSearchModal = () => {
+  DOM.websiteSearchInput.value = "";
+  DOM.websiteSearchResults.innerHTML =
+    '<li class="list-group-item text-muted">请输入关键词进行搜索...</li>';
+  DOM.websiteSearchModal.show();
+  // The 'shown.bs.modal' event is used to ensure the modal is fully visible before focusing.
+  DOM.websiteSearchModalEl.addEventListener(
+    "shown.bs.modal",
+    () => {
+      DOM.websiteSearchInput.focus();
+    },
+    { once: true }
+  );
+};
+
+export const performWebsiteSearch = () => {
+  const query = DOM.websiteSearchInput.value.trim().toLowerCase();
+  const resultsList = DOM.websiteSearchResults;
+  resultsList.innerHTML = "";
+
+  if (!query) {
+    resultsList.innerHTML = '<li class="list-group-item text-muted">请输入关键词进行搜索...</li>';
+    return;
+  }
+
+  const allIcons = state.appData.config.tabs.flatMap((t) => t.icons);
+  const filteredIcons = allIcons.filter(
+    (icon) =>
+      icon.name.toLowerCase().includes(query) ||
+      icon.url.toLowerCase().includes(query) ||
+      (icon.description && icon.description.toLowerCase().includes(query))
+  );
+
+  if (filteredIcons.length === 0) {
+    resultsList.innerHTML = '<li class="list-group-item">未找到匹配的网站</li>';
+    return;
+  }
+
+  filteredIcons.forEach((icon) => {
+    const item = document.createElement("a");
+    item.href = icon.url;
+    item.target = "_blank";
+    item.className =
+      "list-group-item list-group-item-action d-flex align-items-center website-search-item";
+
+    // Sanitize name to prevent potential XSS if name contains HTML
+    const safeName = document.createElement("div");
+    safeName.textContent = icon.name;
+
+    item.innerHTML = `
+      <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${safeName.innerHTML} favicon">
+      <div class="ms-2 flex-grow-1" style="min-width: 0;">
+          <strong>${safeName.innerHTML}</strong>
+          <div class="website-url text-truncate">${icon.url}</div>
+      </div>
+    `;
+    item.addEventListener("click", (e) => {
+      // We only record the click, the default action (opening the link) will proceed.
+      recordClick(icon.id);
+      DOM.websiteSearchModal.hide();
+    });
+    resultsList.appendChild(item);
+  });
 };
 
 // --- Import / Export ---

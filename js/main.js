@@ -102,6 +102,18 @@ const setupEventListeners = () => {
   // Tab Management Modal
   DOM.addTabBtn.addEventListener("click", Handlers.handleAddTab);
 
+  // Website Search
+  DOM.websiteSearchBtn.addEventListener("click", Handlers.showWebsiteSearchModal);
+  DOM.websiteSearchInput.addEventListener("input", Handlers.performWebsiteSearch);
+
+  document.addEventListener("keydown", (event) => {
+    // Open website search on HOME key, but not when typing in an input/textarea
+    if (event.key === "Home" && !["INPUT", "TEXTAREA"].includes(event.target.tagName)) {
+      event.preventDefault();
+      Handlers.showWebsiteSearchModal();
+    }
+  });
+
   // --- Event Delegation for Dynamic Content ---
 
   // Tab switching

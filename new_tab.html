@@ -112,9 +112,30 @@
       </div>
     </header>
     <main class="container-fluid">
-      <ul class="nav nav-tabs" id="tab-container" role="tablist">
-        <!-- Tabs will be dynamically inserted here -->
-      </ul>
+      <div class="d-flex align-items-center">
+        <ul class="nav nav-tabs flex-grow-1" id="tab-container" role="tablist">
+          <!-- Tabs will be dynamically inserted here -->
+        </ul>
+        <button
+          class="btn btn-sm btn-success ms-3 flex-shrink-0"
+          id="websiteSearchBtn"
+          data-bs-toggle="tooltip"
+          title="搜索已添加的网站 (Home)"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            fill="currentColor"
+            class="bi bi-search"
+            viewBox="0 0 16 16"
+          >
+            <path
+              d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"
+            />
+          </svg>
+        </button>
+      </div>
       <div class="tab-content pt-4" id="tab-content-container">
         <!-- Tab panes with icon grids will be dynamically inserted here -->
       </div>
@@ -275,6 +296,42 @@
               <select class="form-select" id="statsTabSelect"></select>
             </div>
             <ul class="list-group" id="tabStatsList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Website Search Modal -->
+    <div
+      class="modal fade"
+      id="websiteSearchModal"
+      tabindex="-1"
+      aria-labelledby="websiteSearchModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="websiteSearchModalLabel">搜索网站</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="input-group mb-3">
+              <input
+                type="text"
+                class="form-control"
+                id="websiteSearchInput"
+                placeholder="输入网站名称、URL 或简介中的内容进行搜索..."
+              />
+            </div>
+            <ul class="list-group" id="websiteSearchResults">
+              <!-- Search results will be inserted here -->
+            </ul>
           </div>
         </div>
       </div>
