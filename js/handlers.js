@@ -472,38 +472,124 @@ export const importData = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
-  if (!confirm("导入将覆盖所有现有数据，此操作不可逆，请确认。")) {
-    DOM.importFileInput.value = "";
-    return;
-  }
-
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
       const importedData = JSON.parse(e.target.result);
-      // Basic validation for the new structure
+      // Basic validation
       if (
-        importedData.version &&
-        importedData.config &&
-        importedData.statistics &&
-        typeof importedData.statistics.iconStats === "object"
+        !importedData.version ||
+        !importedData.config ||
+        !importedData.statistics ||
+        typeof importedData.statistics.iconStats !== "object"
       ) {
-        state.appData = importedData;
-        await saveData();
-        alert("导入成功！页面将刷新。");
-        location.reload();
+        throw new Error("无效或过时的文件格式。");
+      }
+
+      state.importedData = importedData; // Temporarily store imported data
+
+      const newItems = [];
+      const localUrls = new Set(state.appData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
+
+      importedData.config.tabs.forEach((importedTab) => {
+        const localTab = state.appData.config.tabs.find((t) => t.name === importedTab.name);
+        if (localTab) {
+          // Existing tab, check for new icons
+          importedTab.icons.forEach((importedIcon) => {
+            if (!localUrls.has(importedIcon.url)) {
+              newItems.push(
+                `<li>[${localTab.name}] -> ${importedIcon.name} (${importedIcon.url})</li>`
+              );
+            }
+          });
+        } else {
+          // New tab
+          newItems.push(`<li>新标签页: [${importedTab.name}] (包含 ${importedTab.icons.length} 个网站)</li>`);
+        }
+      });
+
+      if (newItems.length > 0) {
+        DOM.importMergeList.innerHTML = newItems.join("");
+        DOM.importMergeModal.show();
       } else {
-        throw new Error("Invalid or outdated file format.");
+        alert("导入的数据与现有配置没有差异。");
+        state.importedData = null; // Clear temporary data
       }
     } catch (error) {
       alert(`导入失败：${error.message}`);
       console.error(error);
+      state.importedData = null; // Clear temporary data
     } finally {
       DOM.importFileInput.value = "";
     }
   };
   reader.readAsText(file);
 };
+
+export const handleMergeImport = async () => {
+  if (!state.importedData) return;
+
+  const importedData = state.importedData;
+  const localData = state.appData;
+
+  // Create a map of local URLs for quick lookup
+  const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
+
+  importedData.config.tabs.forEach((importedTab) => {
+    let localTab = localData.config.tabs.find((t) => t.name === importedTab.name);
+
+    // If tab doesn't exist locally, create it
+    if (!localTab) {
+      localTab = {
+        id: `tab-${Date.now()}-${Math.random()}`,
+        name: importedTab.name,
+        order: localData.config.tabs.length,
+        icons: [],
+      };
+      localData.config.tabs.push(localTab);
+    }
+
+    // Add new icons to the tab
+    importedTab.icons.forEach((importedIcon) => {
+      if (!localUrls.has(importedIcon.url)) {
+        const newIcon = {
+          ...importedIcon,
+          id: `icon-${Date.now()}-${Math.random()}`, // Ensure unique ID
+          order: localTab.icons.length,
+        };
+        localTab.icons.push(newIcon);
+        localUrls.add(newIcon.url); // Add to set to avoid duplicates within the same import
+      }
+    });
+  });
+
+  // Merge statistics
+  // Since we generate new IDs, we can't directly merge stats.
+  // A more sophisticated approach would be needed, e.g., matching by URL.
+  // For now, we'll skip merging stats to avoid conflicts.
+
+  await saveData();
+  alert("合并成功！页面将刷新。");
+  state.importedData = null;
+  DOM.importMergeModal.hide();
+  location.reload();
+};
+
+export const handleOverwriteImport = async () => {
+  if (!state.importedData) return;
+  state.appData = state.importedData;
+  await saveData();
+  alert("覆盖成功！页面将刷新。");
+  state.importedData = null;
+  DOM.importMergeModal.hide();
+  location.reload();
+};
+
+export const handleCancelImport = () => {
+  state.importedData = null;
+  DOM.importMergeModal.hide();
+};
+
 
 export const handleWeTabImport = (event) => {
   const file = event.target.files[0];

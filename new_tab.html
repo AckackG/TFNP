@@ -337,6 +337,44 @@
       </div>
     </div>
 
+
+    <!-- Import Merge Confirmation Modal -->
+    <div
+      class="modal fade"
+      id="importMergeModal"
+      tabindex="-1"
+      aria-labelledby="importMergeModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="importMergeModalLabel">导入确认</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p>检测到导入的文件中有新的网站，请选择导入方式：</p>
+            <h6>新增网站列表：</h6>
+            <ul class="list-group" id="importMergeList">
+              <!-- New items will be dynamically inserted here -->
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelImportBtn">
+              取消导入
+            </button>
+            <button type="button" class="btn btn-danger" id="overwriteImportBtn">覆盖更新</button>
+            <button type="button" class="btn btn-primary" id="mergeImportBtn">接受合并</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="lib/sortablejs/Sortable.min.js"></script>
     <script type="module" src="js/main.js"></script>

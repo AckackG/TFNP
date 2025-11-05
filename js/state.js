@@ -5,6 +5,7 @@ export const state = {
   sortableInstances: [],
   faviconAbortController: null,
   currentSearchEngine: "google", // 'google', 'bing', or 'sogou'
+  importedData: null,
 };
 
 export const loadData = async () => {

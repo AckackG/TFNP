@@ -24,6 +24,11 @@ const setupEventListeners = () => {
   DOM.importFileInput.addEventListener("change", Handlers.importData);
   DOM.importWeTabFileInput.addEventListener("change", Handlers.handleWeTabImport);
 
+  // Import Merge Modal
+  DOM.mergeImportBtn.addEventListener("click", Handlers.handleMergeImport);
+  DOM.overwriteImportBtn.addEventListener("click", Handlers.handleOverwriteImport);
+  DOM.cancelImportBtn.addEventListener("click", Handlers.handleCancelImport);
+
   // Edit Mode
   DOM.editModeSwitch.addEventListener("change", () => {
     document.body.classList.toggle("edit-mode", DOM.editModeSwitch.checked);

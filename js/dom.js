@@ -29,6 +29,15 @@ export const manageTabsModalEl = document.getElementById("manageTabsModal");
 export const manageTabsModal = new bootstrap.Modal(manageTabsModalEl);
 export const statsModalEl = document.getElementById("statsModal");
 export const statsModal = new bootstrap.Modal(statsModalEl);
+export const importMergeModalEl = document.getElementById("importMergeModal");
+export const importMergeModal = new bootstrap.Modal(importMergeModalEl);
+
+// Import Merge Modal elements
+export const importMergeList = document.getElementById("importMergeList");
+export const mergeImportBtn = document.getElementById("mergeImportBtn");
+export const overwriteImportBtn = document.getElementById("overwriteImportBtn");
+export const cancelImportBtn = document.getElementById("cancelImportBtn");
+
 
 // Icon Modal Form elements
 export const iconForm = document.getElementById("iconForm");
