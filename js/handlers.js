@@ -508,12 +508,20 @@ export const importData = (event) => {
         }
       });
 
+      const modalBody = DOM.importMergeModalEl.querySelector('.modal-body');
+      const pElement = modalBody.querySelector('p');
+      const h6Element = modalBody.querySelector('h6');
+
       if (newItems.length > 0) {
+        pElement.textContent = '检测到导入的文件中有新的网站，请选择导入方式：';
+        h6Element.style.display = ''; // Show
         DOM.importMergeList.innerHTML = newItems.join("");
         DOM.importMergeModal.show();
       } else {
-        alert("导入的数据与现有配置没有差异。");
-        state.importedData = null; // Clear temporary data
+        pElement.textContent = '导入的数据与现有配置没有差异。';
+        h6Element.style.display = 'none'; // Hide
+        DOM.importMergeList.innerHTML = ""; // Clear list
+        DOM.importMergeModal.show();
       }
     } catch (error) {
       alert(`导入失败：${error.message}`);
@@ -531,6 +539,7 @@ export const handleMergeImport = async () => {
 
   const importedData = state.importedData;
   const localData = state.appData;
+  let changesMade = false;
 
   // Create a map of local URLs for quick lookup
   const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
@@ -547,6 +556,7 @@ export const handleMergeImport = async () => {
         icons: [],
       };
       localData.config.tabs.push(localTab);
+      changesMade = true;
     }
 
     // Add new icons to the tab
@@ -559,6 +569,7 @@ export const handleMergeImport = async () => {
         };
         localTab.icons.push(newIcon);
         localUrls.add(newIcon.url); // Add to set to avoid duplicates within the same import
+        changesMade = true;
       }
     });
   });
@@ -568,11 +579,16 @@ export const handleMergeImport = async () => {
   // A more sophisticated approach would be needed, e.g., matching by URL.
   // For now, we'll skip merging stats to avoid conflicts.
 
-  await saveData();
-  alert("合并成功！页面将刷新。");
+  if (changesMade) {
+    await saveData();
+    alert("合并成功！页面将刷新。");
+    location.reload();
+  } else {
+    alert("没有需要合并的新项目。");
+  }
+
   state.importedData = null;
   DOM.importMergeModal.hide();
-  location.reload();
 };
 
 export const handleOverwriteImport = async () => {
