@@ -3,6 +3,14 @@ import { state, saveData } from "./state.js";
 import { DEFAULT_FAVICON } from "./constants.js";
 import { showEditIconModal, recordClick } from "./handlers.js";
 
+// 获取实际的图标 URL
+export const getFaviconUrl = (faviconCache) => {
+  if (faviconCache === "default48") {
+    return "icons/icon48.png";
+  }
+  return faviconCache || "icons/icon48.png";
+};
+
 export const render = () => {
   renderTabs();
   renderTabContents();
@@ -31,7 +39,7 @@ export const renderTabContents = () => {
     const pane = document.createElement("div");
     pane.className = `tab-pane fade ${tab.id === state.activeTabId ? "show active" : ""}`;
     pane.id = `pane-${tab.id}`;
-    pane.dataset.tabId = tab.id; // For event delegation
+    pane.dataset.tabId = tab.id;
 
     const grid = document.createElement("div");
     grid.className = "icon-grid";
@@ -48,12 +56,11 @@ export const renderTabContents = () => {
       item.title = icon.description || icon.url;
       item.innerHTML = `
               <div class="icon-image-wrapper">
-                <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${icon.name} favicon">
+                <img src="${getFaviconUrl(icon.faviconCache)}" alt="${icon.name} favicon">
               </div>
               <span class="icon-item-name">${icon.name}</span>
           `;
 
-      // Apply border color if it exists and is not transparent
       if (icon.borderColor && icon.borderColor !== "transparent") {
         const wrapper = item.querySelector(".icon-image-wrapper");
         wrapper.style.borderColor = icon.borderColor;
@@ -68,7 +75,6 @@ export const renderTabContents = () => {
 
 const initTooltips = () => {
   const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-  // Dispose of existing tooltips to prevent memory leaks
   tooltipTriggerList.map(function (tooltipTriggerEl) {
     const tooltip = bootstrap.Tooltip.getInstance(tooltipTriggerEl);
     if (tooltip) {

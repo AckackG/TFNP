@@ -4,8 +4,8 @@ export const SEARCH_ENGINES = {
   sogou: "https://www.sogou.com/web?query=",
 };
 
-// 使用本地图标以减小数据体积
-export const DEFAULT_FAVICON = "icons/icon16.PNG";
+// 默认图标标识符
+export const DEFAULT_FAVICON = "default48";
 
 // 边框颜色选项 (第一个为透明)
 export const BORDER_COLORS = [

@@ -1,15 +1,13 @@
 import * as DOM from "./dom.js";
 import { state, saveData, saveSearchEnginePreference } from "./state.js";
-import { render } from "./ui.js";
+import { render, getFaviconUrl } from "./ui.js";
 import { fetchFavicon } from "./utils.js";
 import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
 
 // --- UI Initialization ---
 export const initializeModalUIs = () => {
-  // Initialize Border Color Selector
   const container = DOM.borderColorSelector;
   if (container.children.length === 0) {
-    // Only build once
     BORDER_COLORS.forEach((color) => {
       const option = document.createElement("div");
       option.className = "color-option";
@@ -73,7 +71,6 @@ export const showAddIconModal = () => {
   DOM.faviconPreview.classList.add("d-none");
   DOM.faviconSpinner.classList.add("d-none");
 
-  // Reset border color selection
   DOM.borderColorSelector.querySelector(".selected")?.classList.remove("selected");
   DOM.borderColorSelector.querySelector('[data-color="transparent"]').classList.add("selected");
   DOM.faviconPreview.style.border = "none";
@@ -94,7 +91,7 @@ export const showEditIconModal = (iconId, tabId) => {
     DOM.urlInput.value = icon.url;
     DOM.nameInput.value = icon.name;
     DOM.descriptionInput.value = icon.description;
-    DOM.faviconPreview.src = icon.faviconCache || DEFAULT_FAVICON;
+    DOM.faviconPreview.src = getFaviconUrl(icon.faviconCache);
     DOM.faviconPreview.classList.remove("d-none");
     DOM.faviconSpinner.classList.add("d-none");
     DOM.deleteIconBtn.classList.remove("d-none");
@@ -102,7 +99,6 @@ export const showEditIconModal = (iconId, tabId) => {
     DOM.moveIconBtn.dataset.iconId = iconId;
     DOM.moveIconBtn.dataset.sourceTabId = tabId;
 
-    // Set border color selection
     const color = icon.borderColor || "transparent";
     DOM.borderColorSelector.querySelector(".selected")?.classList.remove("selected");
     DOM.borderColorSelector.querySelector(`[data-color="${color}"]`).classList.add("selected");
@@ -133,9 +129,13 @@ export const handleIconFormSubmit = async (e) => {
   const description = DOM.descriptionInput.value;
   const tab = state.appData.config.tabs.find((t) => t.id === state.activeTabId);
 
-  let faviconCache = DOM.faviconPreview.src;
-  if (DOM.faviconPreview.classList.contains("d-none") || !faviconCache) {
+  let faviconCache;
+  if (DOM.faviconPreview.classList.contains("d-none") || !DOM.faviconPreview.src) {
     faviconCache = DEFAULT_FAVICON;
+  } else if (DOM.faviconPreview.src.endsWith("icons/icon48.png")) {
+    faviconCache = DEFAULT_FAVICON;
+  } else {
+    faviconCache = DOM.faviconPreview.src;
   }
 
   const selectedColorEl = DOM.borderColorSelector.querySelector(".selected");
@@ -188,14 +188,11 @@ export const moveIconToTab = async (iconId, sourceTabId, targetTabId) => {
   const iconIndex = sourceTab.icons.findIndex((i) => i.id === iconId);
 
   if (iconIndex > -1) {
-    // Remove from source
     const [movedIcon] = sourceTab.icons.splice(iconIndex, 1);
 
-    // Add to target
     movedIcon.order = targetTab.icons.length;
     targetTab.icons.push(movedIcon);
 
-    // Re-order source tab icons
     sourceTab.icons.forEach((icon, index) => {
       icon.order = index;
     });
@@ -264,17 +261,15 @@ export const renderTabManagementList = () => {
     ghostClass: "sortable-ghost",
     handle: ".bi-grip-vertical",
     onEnd: async (evt) => {
-      // Reorder the array in the state
       const movedItem = state.appData.config.tabs.splice(evt.oldIndex, 1)[0];
       state.appData.config.tabs.splice(evt.newIndex, 0, movedItem);
 
-      // Update the 'order' property for all tabs
       state.appData.config.tabs.forEach((tab, index) => {
         tab.order = index;
       });
 
       await saveData();
-      render(); // Re-render the main UI to reflect the new tab order
+      render();
     },
   });
 };
@@ -319,9 +314,9 @@ const renderStatsList = (listElement, data) => {
     const li = document.createElement("li");
     li.className =
       "list-group-item d-flex justify-content-between align-items-center stats-list-item";
-    li.innerHTML = `<div> <span class="me-2">${index + 1}.</span> <img src="${
-      item.faviconCache || DEFAULT_FAVICON
-    }" alt="${item.name}"> <span>${
+    li.innerHTML = `<div> <span class="me-2">${index + 1}.</span> <img src="${getFaviconUrl(
+      item.faviconCache
+    )}" alt="${item.name}"> <span>${
       item.name
     }</span> </div> <span class="badge bg-primary rounded-pill">${item.count}</span>`;
     listElement.appendChild(li);
@@ -349,11 +344,9 @@ export const generateReport = () => {
       .slice(0, 10);
   };
 
-  // Global Top 10
   const globalTop10 = getTop10();
   renderStatsList(DOM.globalStatsList, globalTop10);
 
-  // Per-tab Top 10
   DOM.statsTabSelect.innerHTML = "";
   state.appData.config.tabs.forEach((tab) => {
     DOM.statsTabSelect.innerHTML += `<option value="${tab.id}">${tab.name}</option>`;
@@ -369,7 +362,7 @@ export const generateReport = () => {
     }
   };
 
-  DOM.statsTabSelect.removeEventListener("change", updateTabStats); // Avoid duplicate listeners
+  DOM.statsTabSelect.removeEventListener("change", updateTabStats);
   DOM.statsTabSelect.addEventListener("change", updateTabStats);
   updateTabStats();
 };
@@ -381,7 +374,6 @@ export const showWebsiteSearchModal = () => {
   DOM.websiteSearchResults.innerHTML =
     '<li class="list-group-item text-muted website-search-placeholder">请输入关键词进行搜索...</li>';
   DOM.websiteSearchModal.show();
-  // The 'shown.bs.modal' event is used to ensure the modal is fully visible before focusing.
   DOM.websiteSearchModalEl.addEventListener(
     "shown.bs.modal",
     () => {
@@ -423,29 +415,24 @@ export const performWebsiteSearch = () => {
     item.className =
       "list-group-item list-group-item-action d-flex align-items-center website-search-item";
 
-    // Sanitize name to prevent potential XSS if name contains HTML
     const safeName = document.createElement("div");
     safeName.textContent = icon.name;
 
     item.innerHTML = `
-      <img src="${icon.faviconCache || DEFAULT_FAVICON}" alt="${safeName.innerHTML} favicon">
+      <img src="${getFaviconUrl(icon.faviconCache)}" alt="${safeName.innerHTML} favicon">
       <div class="ms-2 flex-grow-1" style="min-width: 0;">
           <strong>${safeName.innerHTML}</strong>
           <div class="website-url text-truncate">${icon.url}</div>
       </div>
     `;
-    // Handle left-click
     item.addEventListener("click", (e) => {
       recordClick(icon.id);
       DOM.websiteSearchModal.hide();
     });
 
-    // Handle middle-click
     item.addEventListener("auxclick", (e) => {
       if (e.button === 1) {
-        // Middle mouse button
         recordClick(icon.id);
-        // No need to hide modal, user is likely in a new tab
       }
     });
 
@@ -476,7 +463,6 @@ export const importData = (event) => {
   reader.onload = async (e) => {
     try {
       const importedData = JSON.parse(e.target.result);
-      // Basic validation
       if (
         !importedData.version ||
         !importedData.config ||
@@ -486,15 +472,16 @@ export const importData = (event) => {
         throw new Error("无效或过时的文件格式。");
       }
 
-      state.importedData = importedData; // Temporarily store imported data
+      state.importedData = importedData;
 
       const newItems = [];
-      const localUrls = new Set(state.appData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
+      const localUrls = new Set(
+        state.appData.config.tabs.flatMap((t) => t.icons).map((i) => i.url)
+      );
 
       importedData.config.tabs.forEach((importedTab) => {
         const localTab = state.appData.config.tabs.find((t) => t.name === importedTab.name);
         if (localTab) {
-          // Existing tab, check for new icons
           importedTab.icons.forEach((importedIcon) => {
             if (!localUrls.has(importedIcon.url)) {
               newItems.push(
@@ -503,30 +490,31 @@ export const importData = (event) => {
             }
           });
         } else {
-          // New tab
-          newItems.push(`<li>新标签页: [${importedTab.name}] (包含 ${importedTab.icons.length} 个网站)</li>`);
+          newItems.push(
+            `<li>新标签页: [${importedTab.name}] (包含 ${importedTab.icons.length} 个网站)</li>`
+          );
         }
       });
 
-      const modalBody = DOM.importMergeModalEl.querySelector('.modal-body');
-      const pElement = modalBody.querySelector('p');
-      const h6Element = modalBody.querySelector('h6');
+      const modalBody = DOM.importMergeModalEl.querySelector(".modal-body");
+      const pElement = modalBody.querySelector("p");
+      const h6Element = modalBody.querySelector("h6");
 
       if (newItems.length > 0) {
-        pElement.textContent = '检测到导入的文件中有新的网站，请选择导入方式：';
-        h6Element.style.display = ''; // Show
+        pElement.textContent = "检测到导入的文件中有新的网站，请选择导入方式：";
+        h6Element.style.display = "";
         DOM.importMergeList.innerHTML = newItems.join("");
         DOM.importMergeModal.show();
       } else {
-        pElement.textContent = '导入的数据与现有配置没有差异。';
-        h6Element.style.display = 'none'; // Hide
-        DOM.importMergeList.innerHTML = ""; // Clear list
+        pElement.textContent = "导入的数据与现有配置没有差异。";
+        h6Element.style.display = "none";
+        DOM.importMergeList.innerHTML = "";
         DOM.importMergeModal.show();
       }
     } catch (error) {
       alert(`导入失败：${error.message}`);
       console.error(error);
-      state.importedData = null; // Clear temporary data
+      state.importedData = null;
     } finally {
       DOM.importFileInput.value = "";
     }
@@ -541,13 +529,11 @@ export const handleMergeImport = async () => {
   const localData = state.appData;
   let changesMade = false;
 
-  // Create a map of local URLs for quick lookup
   const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
 
   importedData.config.tabs.forEach((importedTab) => {
     let localTab = localData.config.tabs.find((t) => t.name === importedTab.name);
 
-    // If tab doesn't exist locally, create it
     if (!localTab) {
       localTab = {
         id: `tab-${Date.now()}-${Math.random()}`,
@@ -559,25 +545,19 @@ export const handleMergeImport = async () => {
       changesMade = true;
     }
 
-    // Add new icons to the tab
     importedTab.icons.forEach((importedIcon) => {
       if (!localUrls.has(importedIcon.url)) {
         const newIcon = {
           ...importedIcon,
-          id: `icon-${Date.now()}-${Math.random()}`, // Ensure unique ID
+          id: `icon-${Date.now()}-${Math.random()}`,
           order: localTab.icons.length,
         };
         localTab.icons.push(newIcon);
-        localUrls.add(newIcon.url); // Add to set to avoid duplicates within the same import
+        localUrls.add(newIcon.url);
         changesMade = true;
       }
     });
   });
-
-  // Merge statistics
-  // Since we generate new IDs, we can't directly merge stats.
-  // A more sophisticated approach would be needed, e.g., matching by URL.
-  // For now, we'll skip merging stats to avoid conflicts.
 
   if (changesMade) {
     await saveData();
@@ -606,13 +586,12 @@ export const handleCancelImport = () => {
   DOM.importMergeModal.hide();
 };
 
-
 export const handleWeTabImport = (event) => {
   const file = event.target.files[0];
   if (!file) return;
 
   if (!confirm("从 WeTab 导入将覆盖所有现有数据，此操作不可逆，请确认。")) {
-    DOM.importWeTabFileInput.value = ""; // 重置文件输入框
+    DOM.importWeTabFileInput.value = "";
     return;
   }
 
@@ -621,7 +600,6 @@ export const handleWeTabImport = (event) => {
     try {
       const wetabData = JSON.parse(e.target.result);
 
-      // 验证 WeTab 数据结构
       if (
         !wetabData.data ||
         !wetabData.data["store-icon"] ||
@@ -630,7 +608,6 @@ export const handleWeTabImport = (event) => {
         throw new Error('无效的 WeTab 文件格式。未找到 "store-icon" 数据。');
       }
 
-      // 准备一个全新的、空的数据结构
       const newSmartNavData = {
         version: "1.0",
         config: { tabs: [] },
@@ -639,40 +616,33 @@ export const handleWeTabImport = (event) => {
 
       const wetabCategories = wetabData.data["store-icon"].icons;
 
-      // 辅助函数，用于递归处理图标和文件夹
       const processWetabItem = (item, targetIconsArray, targetStatsObject) => {
-        // 如果是文件夹，则递归处理其子项
         if (item.type === "folder-icon" && Array.isArray(item.children)) {
           item.children.forEach((child) =>
             processWetabItem(child, targetIconsArray, targetStatsObject)
           );
-        }
-        // 如果是网站图标，则进行转换
-        else if (item.type === "site" && item.target) {
+        } else if (item.type === "site" && item.target) {
           const newIconId = `icon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
           targetIconsArray.push({
             id: newIconId,
             name: item.name || "未命名",
             url: item.target,
-            description: "", // WeTab 没有简介字段
-            faviconCache: item.bgImage || DEFAULT_FAVICON, // 直接使用 WeTab 的图标 URL 或默认图标
-            borderColor: "transparent", // 添加默认边框颜色
+            description: "",
+            faviconCache: item.bgImage || DEFAULT_FAVICON,
+            borderColor: "transparent",
             order: targetIconsArray.length,
           });
 
-          // 导入统计数据
           if (item.total > 0) {
             targetStatsObject[newIconId] = {
               totalClicks: item.total,
-              // WeTab 只记录最后一次点击时间，我们将其作为唯一的时间戳
               timestamps: item.lasttime > 0 ? [item.lasttime] : [],
             };
           }
         }
       };
 
-      // 遍历 WeTab 的分类（即我们的标签页）
       wetabCategories.forEach((category, index) => {
         const newTab = {
           id: `tab-${Date.now()}-${index}`,
@@ -690,7 +660,6 @@ export const handleWeTabImport = (event) => {
         newSmartNavData.config.tabs.push(newTab);
       });
 
-      // 转换完成，保存数据并刷新
       state.appData = newSmartNavData;
       await saveData();
       alert("从 WeTab 导入成功！页面将刷新。");
@@ -699,7 +668,7 @@ export const handleWeTabImport = (event) => {
       alert(`导入失败：${error.message}`);
       console.error("WeTab import error:", error);
     } finally {
-      DOM.importWeTabFileInput.value = ""; // 无论成功失败，都重置文件输入框
+      DOM.importWeTabFileInput.value = "";
     }
   };
   reader.readAsText(file);
