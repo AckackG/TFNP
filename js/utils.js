@@ -36,7 +36,7 @@ export const fetchFavicon = async (url) => {
     }
   };
 
-  const normalizeUrl = (url) => {
+  const getHostname = (url) => {
     try {
       if (!/^https?:\/\//i.test(url)) {
         url = `https://${url}`;
@@ -48,7 +48,7 @@ export const fetchFavicon = async (url) => {
     }
   };
 
-  const domain = normalizeUrl(url);
+  const domain = getHostname(url);
   if (!domain) {
     console.log("Invalid URL, using default favicon");
     setFavicon(DEFAULT_FAVICON);
@@ -68,4 +68,11 @@ export const fetchFavicon = async (url) => {
     console.log("Using default favicon");
     setFavicon(DEFAULT_FAVICON);
   }
+};
+
+export const normalizeUrl = (url) => {
+  if (url.endsWith('/')) {
+    return url.slice(0, -1);
+  }
+  return url;
 };

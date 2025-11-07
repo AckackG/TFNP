@@ -1,7 +1,7 @@
 import * as DOM from "./dom.js";
 import { state, saveData, saveSearchEnginePreference } from "./state.js";
 import { render, getFaviconUrl } from "./ui.js";
-import { fetchFavicon } from "./utils.js";
+import { fetchFavicon, normalizeUrl } from "./utils.js";
 import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
 
 // --- UI Initialization ---
@@ -476,14 +476,14 @@ export const importData = (event) => {
 
       const newItems = [];
       const localUrls = new Set(
-        state.appData.config.tabs.flatMap((t) => t.icons).map((i) => i.url)
+        state.appData.config.tabs.flatMap((t) => t.icons).map((i) => normalizeUrl(i.url))
       );
 
       importedData.config.tabs.forEach((importedTab) => {
         const localTab = state.appData.config.tabs.find((t) => t.name === importedTab.name);
         if (localTab) {
           importedTab.icons.forEach((importedIcon) => {
-            if (!localUrls.has(importedIcon.url)) {
+            if (!localUrls.has(normalizeUrl(importedIcon.url))) {
               newItems.push(
                 `<li>[${localTab.name}] -> ${importedIcon.name} (${importedIcon.url})</li>`
               );
@@ -529,7 +529,7 @@ export const handleMergeImport = async () => {
   const localData = state.appData;
   let changesMade = false;
 
-  const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => i.url));
+  const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => normalizeUrl(i.url)));
 
   importedData.config.tabs.forEach((importedTab) => {
     let localTab = localData.config.tabs.find((t) => t.name === importedTab.name);
@@ -546,7 +546,7 @@ export const handleMergeImport = async () => {
     }
 
     importedTab.icons.forEach((importedIcon) => {
-      if (!localUrls.has(importedIcon.url)) {
+      if (!localUrls.has(normalizeUrl(importedIcon.url))) {
         const newIcon = {
           ...importedIcon,
           id: `icon-${Date.now()}-${Math.random()}`,
