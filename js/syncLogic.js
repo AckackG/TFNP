@@ -23,7 +23,12 @@ export async function performSync(force = false) {
       return;
     }
 
-    if (!sync_settings || !sync_settings.server_url || !sync_settings.username || !sync_settings.password) {
+    if (
+      !sync_settings ||
+      !sync_settings.server_url ||
+      !sync_settings.username ||
+      !sync_settings.password
+    ) {
       throw new Error("Missing WebDAV configuration.");
     }
 
@@ -80,7 +85,6 @@ export async function performSync(force = false) {
     }
 
     await updateSyncStatus(sync_settings, new Date().toISOString(), "success");
-
   } catch (error) {
     console.error("Sync Error:", error);
     const { sync_settings } = await chrome.storage.local.get(["sync_settings"]);
@@ -105,11 +109,13 @@ async function updateSyncStatus(currentSettings, time, status) {
 function notifyTabs(msg) {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
-      if (tab.url && tab.url.startsWith("http") || tab.url.startsWith("chrome-extension")) {
-        chrome.tabs.sendMessage(tab.id, {
-          action: "sync_completed_refresh",
-          message: msg,
-        }).catch(() => {});
+      if ((tab.url && tab.url.startsWith("http")) || tab.url.startsWith("chrome-extension")) {
+        chrome.tabs
+          .sendMessage(tab.id, {
+            action: "sync_completed_refresh",
+            message: msg,
+          })
+          .catch(() => {});
       }
     });
   });

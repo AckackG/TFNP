@@ -529,7 +529,9 @@ export const handleMergeImport = async () => {
   const localData = state.appData;
   let changesMade = false;
 
-  const localUrls = new Set(localData.config.tabs.flatMap((t) => t.icons).map((i) => normalizeUrl(i.url)));
+  const localUrls = new Set(
+    localData.config.tabs.flatMap((t) => t.icons).map((i) => normalizeUrl(i.url))
+  );
 
   importedData.config.tabs.forEach((importedTab) => {
     let localTab = localData.config.tabs.find((t) => t.name === importedTab.name);
@@ -690,7 +692,8 @@ export const showSyncSettingsModal = async () => {
       const time = new Date(sync_settings.last_sync_time).toLocaleString();
       const status = sync_settings.last_sync_status === "success" ? "成功" : "失败";
       DOM.syncStatusMsg.textContent = `上次同步: ${time} (${status})`;
-      DOM.syncStatusMsg.className = status === "成功" ? "alert alert-success mt-3" : "alert alert-danger mt-3";
+      DOM.syncStatusMsg.className =
+        status === "成功" ? "alert alert-success mt-3" : "alert alert-danger mt-3";
     }
   }
 
@@ -705,7 +708,7 @@ export const saveSyncSettings = async () => {
     password: DOM.syncPasswordInput.value,
     interval: parseInt(DOM.syncIntervalInput.value) || 30,
     last_sync_time: null,
-    last_sync_status: null
+    last_sync_status: null,
   };
 
   await chrome.storage.local.set({ sync_settings: settings });
@@ -720,7 +723,7 @@ export const handleTriggerSync = async () => {
     server_url: DOM.syncServerUrlInput.value.trim(),
     username: DOM.syncUsernameInput.value.trim(),
     password: DOM.syncPasswordInput.value,
-    interval: parseInt(DOM.syncIntervalInput.value) || 30
+    interval: parseInt(DOM.syncIntervalInput.value) || 30,
   };
 
   // We need to merge with existing status to not lose it, or just update settings
@@ -734,7 +737,9 @@ export const handleTriggerSync = async () => {
     DOM.triggerSyncBtn.textContent = "立即同步";
 
     if (response && response.success) {
-      DOM.syncStatusMsg.textContent = "同步成功！";
+      // 同步成功时显示时间
+      const now = new Date().toLocaleString();
+      DOM.syncStatusMsg.textContent = `同步成功！时间: ${now}`;
       DOM.syncStatusMsg.className = "alert alert-success mt-3";
     } else {
       DOM.syncStatusMsg.textContent = `同步失败: ${response ? response.error : "未知错误"}`;
