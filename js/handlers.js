@@ -384,7 +384,8 @@ export const showWebsiteSearchModal = () => {
 };
 
 export const performWebsiteSearch = () => {
-  const query = DOM.websiteSearchInput.value.trim().toLowerCase();
+  const PinyinMatch = window.PinyinMatch;
+  const query = DOM.websiteSearchInput.value.trim(); // Do not use toLowerCase() here, let PinyinMatch handle it
   const resultsList = DOM.websiteSearchResults;
   resultsList.innerHTML = "";
 
@@ -395,12 +396,19 @@ export const performWebsiteSearch = () => {
   }
 
   const allIcons = state.appData.config.tabs.flatMap((t) => t.icons);
-  const filteredIcons = allIcons.filter(
-    (icon) =>
-      icon.name.toLowerCase().includes(query) ||
-      icon.url.toLowerCase().includes(query) ||
-      (icon.description && icon.description.toLowerCase().includes(query))
-  );
+
+  const filteredIcons = allIcons.filter((icon) => {
+    // 1. Standard string matching (Name, URL, Description)
+    const basicMatch =
+      icon.name.toLowerCase().includes(query.toLowerCase()) ||
+      icon.url.toLowerCase().includes(query.toLowerCase()) ||
+      (icon.description && icon.description.toLowerCase().includes(query.toLowerCase()));
+
+    // 2. Pinyin matching on Name
+    const pinyinMatch = PinyinMatch.match(icon.name, query);
+
+    return basicMatch || pinyinMatch;
+  });
 
   if (filteredIcons.length === 0) {
     resultsList.innerHTML =
@@ -575,7 +583,13 @@ export const handleMergeImport = async () => {
 
 export const handleOverwriteImport = async () => {
   if (!state.importedData) return;
+
+  // Update state
   state.appData = state.importedData;
+
+  // CRITICAL: Force update the timestamp to now so Sync sees this as a new change
+  state.appData.update_timestamp = Date.now();
+
   await saveData();
   alert("覆盖成功！页面将刷新。");
   state.importedData = null;

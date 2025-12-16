@@ -2,12 +2,11 @@ import * as DOM from "./dom.js";
 import { state, loadData } from "./state.js";
 import { render } from "./ui.js";
 import * as Handlers from "./handlers.js";
-import { fetchFavicon } from "./utils.js";
+import { fetchFavicon, debounce } from "./utils.js";
 
 // --- Event Listeners Setup ---
 const setupEventListeners = () => {
   // Header Buttons
-  DOM.addIconBtn.addEventListener("click", Handlers.showAddIconModal);
   DOM.manageTabsBtn.addEventListener("click", () => {
     Handlers.renderTabManagementList();
     DOM.manageTabsModal.show();
@@ -120,7 +119,7 @@ const setupEventListeners = () => {
 
   // Website Search
   DOM.websiteSearchBtn.addEventListener("click", Handlers.showWebsiteSearchModal);
-  DOM.websiteSearchInput.addEventListener("input", Handlers.performWebsiteSearch);
+  DOM.websiteSearchInput.addEventListener("input", debounce(Handlers.performWebsiteSearch, 150));
 
   document.addEventListener("keydown", (event) => {
     // Open website search on HOME key, but not when typing in an input/textarea
@@ -144,14 +143,21 @@ const setupEventListeners = () => {
 
   // Icon clicks (left, middle, right)
   DOM.tabContentContainer.addEventListener("click", (e) => {
+    // 1. Check if the clicked element is the "Add Button"
+    const addBtn = e.target.closest(".add-icon-button");
+    if (addBtn) {
+      Handlers.showAddIconModal();
+      return;
+    }
+
+    // 2. Existing logic for normal icons
     const iconItem = e.target.closest(".icon-item");
     if (!iconItem) return;
 
     if (DOM.editModeSwitch.checked) {
-      e.preventDefault(); // Prevent navigation in edit mode
+      e.preventDefault();
       return;
     }
-    // Normal left-click is handled by the <a> tag, just record it
     Handlers.recordClick(iconItem.dataset.iconId);
   });
 

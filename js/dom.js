@@ -3,7 +3,6 @@ export const tabContainer = document.getElementById("tab-container");
 export const tabContentContainer = document.getElementById("tab-content-container");
 
 // Header buttons
-export const addIconBtn = document.getElementById("addIconBtn");
 export const editModeSwitch = document.getElementById("editModeSwitch");
 export const manageTabsBtn = document.getElementById("manageTabsBtn");
 export const showStatsBtn = document.getElementById("showStatsBtn");

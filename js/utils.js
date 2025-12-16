@@ -76,3 +76,12 @@ export const normalizeUrl = (url) => {
   }
   return url;
 };
+
+export const debounce = (func, wait) => {
+  let timeout;
+  return function (...args) {
+    const context = this;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), wait);
+  };
+};

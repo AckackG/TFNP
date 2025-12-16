@@ -54,26 +54,6 @@
             <input class="form-check-input" type="checkbox" role="switch" id="editModeSwitch" />
             <label class="form-check-label" for="editModeSwitch">拖拽图标</label>
           </div>
-          <button
-            class="btn btn-sm btn-primary"
-            id="addIconBtn"
-            data-bs-toggle="tooltip"
-            title="添加新网站到当前标签页"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              fill="currentColor"
-              class="bi bi-plus-lg"
-              viewBox="0 0 16 16"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2Z"
-              />
-            </svg>
-          </button>
           <div class="dropdown">
             <button
               class="btn btn-sm btn-secondary dropdown-toggle"
@@ -96,7 +76,6 @@
               </svg>
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="settingsDropdown">
-              <li><button class="dropdown-item" id="manageTabsBtn">管理标签页</button></li>
               <li><button class="dropdown-item" id="showStatsBtn">查看统计报告</button></li>
               <li><button class="dropdown-item" id="openSyncSettingsBtn">云端同步设置</button></li>
               <li><hr class="dropdown-divider" /></li>
@@ -117,8 +96,11 @@
         <ul class="nav nav-tabs flex-grow-1" id="tab-container" role="tablist">
           <!-- Tabs will be dynamically inserted here -->
         </ul>
+        <button class="btn btn-sm btn-outline-secondary ms-3 flex-shrink-0" id="manageTabsBtn">
+          TAB管理
+        </button>
         <button
-          class="btn btn-sm btn-success ms-3 flex-shrink-0"
+          class="btn btn-sm btn-success ms-2 flex-shrink-0"
           id="websiteSearchBtn"
           data-bs-toggle="tooltip"
           title="搜索已添加的网站 (Home)"
@@ -338,7 +320,6 @@
       </div>
     </div>
 
-
     <!-- Import Merge Confirmation Modal -->
     <div
       class="modal fade"
@@ -366,7 +347,12 @@
             </ul>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="cancelImportBtn">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+              id="cancelImportBtn"
+            >
               取消导入
             </button>
             <button type="button" class="btn btn-danger" id="overwriteImportBtn">覆盖更新</button>
@@ -382,31 +368,41 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">WebDAV 同步设置</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="modal-body">
             <form id="syncSettingsForm">
               <div class="form-check form-switch mb-3">
-                <input class="form-check-input" type="checkbox" id="syncEnabled">
+                <input class="form-check-input" type="checkbox" id="syncEnabled" />
                 <label class="form-check-label" for="syncEnabled">启用自动同步</label>
               </div>
               <div class="mb-3">
                 <label class="form-label">服务器地址 (WebDAV URL)</label>
-                <input type="url" class="form-control" id="syncServerUrl" placeholder="https://dav.example.com/dav/">
+                <input
+                  type="url"
+                  class="form-control"
+                  id="syncServerUrl"
+                  placeholder="https://dav.example.com/dav/"
+                />
               </div>
               <div class="mb-3">
                 <label class="form-label">用户名</label>
-                <input type="text" class="form-control" id="syncUsername">
+                <input type="text" class="form-control" id="syncUsername" />
               </div>
               <div class="mb-3">
                 <label class="form-label">密码</label>
-                <input type="password" class="form-control" id="syncPassword">
+                <input type="password" class="form-control" id="syncPassword" />
               </div>
               <div class="mb-3">
                 <label class="form-label">同步间隔 (分钟)</label>
-                <input type="number" class="form-control" id="syncInterval" value="30" min="5">
+                <input type="number" class="form-control" id="syncInterval" value="30" min="5" />
               </div>
-              <div class="alert alert-secondary mt-3" id="syncStatusMsg" style="font-size: 0.9rem;">
+              <div class="alert alert-secondary mt-3" id="syncStatusMsg" style="font-size: 0.9rem">
                 暂无同步记录
               </div>
             </form>
@@ -421,6 +417,7 @@
 
     <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="lib/sortablejs/Sortable.min.js"></script>
+    <script src="lib/pinyin.min.js"></script>
     <script type="module" src="js/main.js"></script>
   </body>
 </html>

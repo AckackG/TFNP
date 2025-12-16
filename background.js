@@ -48,3 +48,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true; // Keep channel open
   }
 });
+
+// Trigger Sync on Browser Startup
+chrome.runtime.onStartup.addListener(async () => {
+  const { sync_settings } = await chrome.storage.local.get("sync_settings");
+  if (sync_settings && sync_settings.enabled) {
+    console.log("Browser startup: Triggering sync...");
+    performSync(false);
+  }
+});
