@@ -1,41 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "Turfia 的导航首页 (Turfia's New Homepage)",
-  "version": "1.21",
-  "description": "无联网功能的标签页",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
+  "name": "Turfia's New Homepage",
+  "version": "1.22", 
   "permissions": [
     "storage",
-    "favicon"
+    "unlimitedStorage",
+    "favicon",
+    "alarms" 
   ],
   "host_permissions": [
-    "https://favicone.com/*"
+    "https://favicone.com/*",
+    "https://dav.jianguoyun.com/*"
   ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "chrome_url_overrides": {
     "newtab": "new_tab.html"
   },
-  "background": {
-    "service_worker": "background.js"
-  },
   "action": {
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png"
-    },
-    "default_title": "TFNP"
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png" }
   },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "icons/icon16.PNG"
-      ],
-      "matches": [
-        "<all_urls>"
-      ]
-    }
-  ]
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" },
+  "web_accessible_resources": [ { "resources": ["icons/icon16.PNG"], "matches": ["<all_urls>"] } ]
 }

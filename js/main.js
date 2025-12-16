@@ -20,6 +20,17 @@ const setupEventListeners = () => {
   DOM.importBtn.addEventListener("click", () => DOM.importFileInput.click());
   DOM.importWeTabBtn.addEventListener("click", () => DOM.importWeTabFileInput.click());
 
+  // Sync Settings
+  if (DOM.openSyncSettingsBtn) {
+      DOM.openSyncSettingsBtn.addEventListener("click", Handlers.showSyncSettingsModal);
+  }
+  if (DOM.saveSyncSettingsBtn) {
+      DOM.saveSyncSettingsBtn.addEventListener("click", Handlers.saveSyncSettings);
+  }
+  if (DOM.triggerSyncBtn) {
+      DOM.triggerSyncBtn.addEventListener("click", Handlers.handleTriggerSync);
+  }
+
   // File Inputs
   DOM.importFileInput.addEventListener("change", Handlers.importData);
   DOM.importWeTabFileInput.addEventListener("change", Handlers.handleWeTabImport);
@@ -176,3 +187,15 @@ const initializeApp = async () => {
 
 // Start the app
 document.addEventListener("DOMContentLoaded", initializeApp);
+
+// Listener for Sync Updates (Soft Refresh)
+chrome.runtime.onMessage.addListener(async (request) => {
+  if (request.action === "sync_completed_refresh") {
+    console.log("Sync finished, updating UI...");
+    // 1. Reload data from storage into state
+    await loadData();
+    // 2. Re-render the UI grid
+    render();
+    console.log("UI Updated.");
+  }
+});

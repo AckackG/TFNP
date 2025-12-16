@@ -38,6 +38,8 @@ export const loadData = async () => {
 };
 
 export const saveData = async () => {
+  // Update timestamp for Last-Write-Wins logic
+  state.appData.update_timestamp = Date.now();
   await chrome.storage.local.set({ smartNavData: state.appData });
 };
 

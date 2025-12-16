@@ -70,3 +70,16 @@ export const websiteSearchModalEl = document.getElementById("websiteSearchModal"
 export const websiteSearchModal = new bootstrap.Modal(websiteSearchModalEl);
 export const websiteSearchInput = document.getElementById("websiteSearchInput");
 export const websiteSearchResults = document.getElementById("websiteSearchResults");
+
+// Sync Settings Elements
+export const openSyncSettingsBtn = document.getElementById("openSyncSettingsBtn");
+export const syncSettingsModalEl = document.getElementById("syncSettingsModal");
+export const syncSettingsModal = new bootstrap.Modal(syncSettingsModalEl);
+export const syncEnabledInput = document.getElementById("syncEnabled");
+export const syncServerUrlInput = document.getElementById("syncServerUrl");
+export const syncUsernameInput = document.getElementById("syncUsername");
+export const syncPasswordInput = document.getElementById("syncPassword");
+export const syncIntervalInput = document.getElementById("syncInterval");
+export const syncStatusMsg = document.getElementById("syncStatusMsg");
+export const triggerSyncBtn = document.getElementById("triggerSyncBtn");
+export const saveSyncSettingsBtn = document.getElementById("saveSyncSettingsBtn");

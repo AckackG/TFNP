@@ -673,3 +673,72 @@ export const handleWeTabImport = (event) => {
   };
   reader.readAsText(file);
 };
+
+// --- Sync Settings Handlers ---
+
+export const showSyncSettingsModal = async () => {
+  const { sync_settings } = await chrome.storage.local.get("sync_settings");
+
+  if (sync_settings) {
+    DOM.syncEnabledInput.checked = sync_settings.enabled || false;
+    DOM.syncServerUrlInput.value = sync_settings.server_url || "";
+    DOM.syncUsernameInput.value = sync_settings.username || "";
+    DOM.syncPasswordInput.value = sync_settings.password || "";
+    DOM.syncIntervalInput.value = sync_settings.interval || 30;
+
+    if (sync_settings.last_sync_time) {
+      const time = new Date(sync_settings.last_sync_time).toLocaleString();
+      const status = sync_settings.last_sync_status === "success" ? "成功" : "失败";
+      DOM.syncStatusMsg.textContent = `上次同步: ${time} (${status})`;
+      DOM.syncStatusMsg.className = status === "成功" ? "alert alert-success mt-3" : "alert alert-danger mt-3";
+    }
+  }
+
+  DOM.syncSettingsModal.show();
+};
+
+export const saveSyncSettings = async () => {
+  const settings = {
+    enabled: DOM.syncEnabledInput.checked,
+    server_url: DOM.syncServerUrlInput.value.trim(),
+    username: DOM.syncUsernameInput.value.trim(),
+    password: DOM.syncPasswordInput.value,
+    interval: parseInt(DOM.syncIntervalInput.value) || 30,
+    last_sync_time: null,
+    last_sync_status: null
+  };
+
+  await chrome.storage.local.set({ sync_settings: settings });
+  alert("设置已保存！自动同步将在后台运行。");
+  DOM.syncSettingsModal.hide();
+};
+
+export const handleTriggerSync = async () => {
+  // Save temporary settings to storage so background can read them if they changed
+  const tempSettings = {
+    enabled: DOM.syncEnabledInput.checked,
+    server_url: DOM.syncServerUrlInput.value.trim(),
+    username: DOM.syncUsernameInput.value.trim(),
+    password: DOM.syncPasswordInput.value,
+    interval: parseInt(DOM.syncIntervalInput.value) || 30
+  };
+
+  // We need to merge with existing status to not lose it, or just update settings
+  await chrome.storage.local.set({ sync_settings: tempSettings });
+
+  DOM.triggerSyncBtn.disabled = true;
+  DOM.triggerSyncBtn.textContent = "同步中...";
+
+  chrome.runtime.sendMessage({ action: "trigger_sync_now" }, (response) => {
+    DOM.triggerSyncBtn.disabled = false;
+    DOM.triggerSyncBtn.textContent = "立即同步";
+
+    if (response && response.success) {
+      DOM.syncStatusMsg.textContent = "同步成功！";
+      DOM.syncStatusMsg.className = "alert alert-success mt-3";
+    } else {
+      DOM.syncStatusMsg.textContent = `同步失败: ${response ? response.error : "未知错误"}`;
+      DOM.syncStatusMsg.className = "alert alert-danger mt-3";
+    }
+  });
+};
