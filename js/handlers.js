@@ -691,9 +691,13 @@ export const handleWeTabImport = (event) => {
 };
 
 // --- Sync Settings Handlers ---
-
 export const showSyncSettingsModal = async () => {
   const { sync_settings } = await chrome.storage.local.get("sync_settings");
+
+  // Reset display
+  DOM.syncStatusMsg.className = "d-none";
+  DOM.syncLastCheckMsg.textContent = "从未检查";
+  DOM.syncLastSuccessMsg.textContent = "从未同步";
 
   if (sync_settings) {
     DOM.syncEnabledInput.checked = sync_settings.enabled || false;
@@ -702,12 +706,30 @@ export const showSyncSettingsModal = async () => {
     DOM.syncPasswordInput.value = sync_settings.password || "";
     DOM.syncIntervalInput.value = sync_settings.interval || 30;
 
-    if (sync_settings.last_sync_time) {
-      const time = new Date(sync_settings.last_sync_time).toLocaleString();
-      const status = sync_settings.last_sync_status === "success" ? "成功" : "失败";
-      DOM.syncStatusMsg.textContent = `上次同步: ${time} (${status})`;
-      DOM.syncStatusMsg.className =
-        status === "成功" ? "alert alert-success mt-3" : "alert alert-danger mt-3";
+    // 显示上次检查时间
+    if (sync_settings.last_check_time) {
+      DOM.syncLastCheckMsg.textContent = new Date(sync_settings.last_check_time).toLocaleString();
+    }
+
+    // 显示上次成功同步时间
+    if (sync_settings.last_sync_success_time) {
+      DOM.syncLastSuccessMsg.textContent = new Date(
+        sync_settings.last_sync_success_time
+      ).toLocaleString();
+    }
+
+    // 显示当前状态/错误信息
+    if (sync_settings.last_sync_status) {
+      const status = sync_settings.last_sync_status;
+      DOM.syncStatusMsg.classList.remove("d-none");
+
+      if (status === "success") {
+        DOM.syncStatusMsg.className = "alert alert-success mt-3";
+        DOM.syncStatusMsg.textContent = "状态: 同步正常";
+      } else {
+        DOM.syncStatusMsg.className = "alert alert-danger mt-3";
+        DOM.syncStatusMsg.textContent = `状态: ${status}`;
+      }
     }
   }
 
@@ -731,7 +753,7 @@ export const saveSyncSettings = async () => {
 };
 
 export const handleTriggerSync = async () => {
-  // Save temporary settings to storage so background can read them if they changed
+  // Save temporary settings logic remains same...
   const tempSettings = {
     enabled: DOM.syncEnabledInput.checked,
     server_url: DOM.syncServerUrlInput.value.trim(),
@@ -739,25 +761,38 @@ export const handleTriggerSync = async () => {
     password: DOM.syncPasswordInput.value,
     interval: parseInt(DOM.syncIntervalInput.value) || 30,
   };
-
-  // We need to merge with existing status to not lose it, or just update settings
   await chrome.storage.local.set({ sync_settings: tempSettings });
 
   DOM.triggerSyncBtn.disabled = true;
   DOM.triggerSyncBtn.textContent = "同步中...";
+  DOM.syncStatusMsg.classList.add("d-none"); // Hide previous status
 
   chrome.runtime.sendMessage({ action: "trigger_sync_now" }, (response) => {
     DOM.triggerSyncBtn.disabled = false;
     DOM.triggerSyncBtn.textContent = "立即同步";
 
+    // Re-fetch settings to get updated timestamps
+    chrome.storage.local.get("sync_settings").then(({ sync_settings }) => {
+      if (sync_settings) {
+        if (sync_settings.last_check_time)
+          DOM.syncLastCheckMsg.textContent = new Date(
+            sync_settings.last_check_time
+          ).toLocaleString();
+        if (sync_settings.last_sync_success_time)
+          DOM.syncLastSuccessMsg.textContent = new Date(
+            sync_settings.last_sync_success_time
+          ).toLocaleString();
+      }
+    });
+
     if (response && response.success) {
-      // 同步成功时显示时间
-      const now = new Date().toLocaleString();
-      DOM.syncStatusMsg.textContent = `同步成功！时间: ${now}`;
+      DOM.syncStatusMsg.textContent = `同步成功！`;
       DOM.syncStatusMsg.className = "alert alert-success mt-3";
+      DOM.syncStatusMsg.classList.remove("d-none");
     } else {
       DOM.syncStatusMsg.textContent = `同步失败: ${response ? response.error : "未知错误"}`;
       DOM.syncStatusMsg.className = "alert alert-danger mt-3";
+      DOM.syncStatusMsg.classList.remove("d-none");
     }
   });
 };

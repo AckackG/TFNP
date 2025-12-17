@@ -1,3 +1,13 @@
+import { debounce } from "./utils.js"; // 确保引入 debounce
+
+// 创建一个防抖的同步触发器，避免短时间内频繁操作导致多次网络请求
+// 延迟 2 秒执行，给用户连续操作留出缓冲
+const debouncedAutoSync = debounce(() => {
+  chrome.runtime.sendMessage({ action: "trigger_sync_now" }).catch(() => {
+    // 忽略错误，通常是因为扩展上下文失效或后台未就绪
+  });
+}, 2000);
+
 // Using an object to hold the state, so it can be mutated across modules.
 export const state = {
   appData: {},
@@ -41,6 +51,15 @@ export const saveData = async () => {
   // Update timestamp for Last-Write-Wins logic
   state.appData.update_timestamp = Date.now();
   await chrome.storage.local.set({ smartNavData: state.appData });
+
+  // --- MODIFIED: Trigger auto-sync after save ---
+  // 检查设置是否开启了同步，如果开启则触发自动推送
+  chrome.storage.local.get("sync_settings").then(({ sync_settings }) => {
+    if (sync_settings && sync_settings.enabled) {
+      console.log("Data saved, triggering auto-sync...");
+      debouncedAutoSync();
+    }
+  });
 };
 
 export const saveSearchEnginePreference = async () => {

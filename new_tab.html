@@ -402,8 +402,23 @@
                 <label class="form-label">同步间隔 (分钟)</label>
                 <input type="number" class="form-control" id="syncInterval" value="30" min="5" />
               </div>
-              <div class="alert alert-secondary mt-3" id="syncStatusMsg" style="font-size: 0.9rem">
-                暂无同步记录
+
+              <!-- Modified Status Display -->
+              <div class="border rounded p-3 text-light mt-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <small class="text-muted">上次检查:</small>
+                  <small id="syncLastCheckMsg">从未检查</small>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                  <small class="text-muted">上次更新:</small>
+                  <small id="syncLastSuccessMsg" class="fw-bold">从未同步</small>
+                </div>
+                <!-- Alert box for errors or explicit success status -->
+                <div
+                  class="alert alert-secondary mb-0 py-2 d-none"
+                  id="syncStatusMsg"
+                  style="font-size: 0.9rem"
+                ></div>
               </div>
             </form>
           </div>
@@ -413,6 +428,13 @@
           </div>
         </div>
       </div>
+    </div>
+    <div
+      class="toast-container position-fixed top-0 end-0 p-3"
+      id="toast-container"
+      style="z-index: 1090"
+    >
+      <!-- Toasts will be injected here -->
     </div>
 
     <script src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>

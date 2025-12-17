@@ -9,7 +9,7 @@ export async function performSync(force = false) {
   }
 
   isSyncing = true;
-  const dataFileName = "smartNavData.json.gz"; // Adapted filename
+  const dataFileName = "smartNavData.json.gz";
   const metaFileName = "meta.json";
 
   try {
@@ -29,7 +29,7 @@ export async function performSync(force = false) {
       !sync_settings.username ||
       !sync_settings.password
     ) {
-      throw new Error("Missing WebDAV configuration.");
+      throw new Error("配置缺失：请检查服务器地址、用户名和密码。");
     }
 
     const client = new WebDAVClient(
@@ -38,8 +38,16 @@ export async function performSync(force = false) {
       sync_settings.password
     );
 
-    const localTs = localData && localData.update_timestamp ? localData.update_timestamp : 0;
+    // 1. 记录检查开始时间
+    await updateSyncStatus(sync_settings, { checkTime: Date.now() });
 
+    // 2. 检查连接
+    const canConnect = await client.checkConnection();
+    if (!canConnect) {
+      throw new Error("无法连接到 WebDAV 服务器，请检查网络或配置。");
+    }
+
+    const localTs = localData && localData.update_timestamp ? localData.update_timestamp : 0;
     let remoteTs = 0;
     let metaData = null;
 
@@ -52,71 +60,85 @@ export async function performSync(force = false) {
     if (metaData && metaData.update_timestamp) {
       remoteTs = metaData.update_timestamp;
     } else {
-      const remoteDataFile = await client.getFile(dataFileName);
-      if (remoteDataFile && remoteDataFile.update_timestamp) {
-        remoteTs = remoteDataFile.update_timestamp;
+      try {
+        const remoteDataFile = await client.getFile(dataFileName);
+        if (remoteDataFile && remoteDataFile.update_timestamp) {
+          remoteTs = remoteDataFile.update_timestamp;
+        }
+      } catch (e) {
+        // 如果文件不存在，remoteTs 保持 0，视为新初始化
+        console.log("Remote data file check failed or not found:", e);
       }
     }
 
     console.log(`Sync Check: Local TS=${localTs}, Remote TS=${remoteTs}`);
 
+    let syncAction = "none"; // none, push, pull
+
     if (remoteTs === 0 && localTs > 0) {
-      // Push local to remote
-      console.log("Pushing initial data to server...");
-      await client.putFile(dataFileName, localData);
-      await client.putFileJson(metaFileName, { update_timestamp: localTs });
+      syncAction = "push";
     } else if (localTs > remoteTs) {
-      // Push local to remote
-      console.log("Local is newer. Pushing to server...");
+      syncAction = "push";
+    } else if (localTs < remoteTs) {
+      syncAction = "pull";
+    }
+
+    if (syncAction === "push") {
+      console.log("Pushing local data to server...");
       await client.putFile(dataFileName, localData);
       await client.putFileJson(metaFileName, { update_timestamp: localTs });
-    } else if (localTs < remoteTs) {
-      // Pull remote to local
-      console.log("Remote is newer. Pulling from server...");
+      await updateSyncStatus(sync_settings, { syncTime: Date.now(), status: "success" });
+      notifyFrontend("toast", "TFNP 本地配置已成功推送到云端。");
+    } else if (syncAction === "pull") {
+      console.log("Pulling remote data from server...");
       const remoteData = await client.getFile(dataFileName);
-      if (!remoteData) throw new Error("Failed to download remote data.");
+      if (!remoteData) throw new Error("TFNP 下载远程数据失败，文件可能为空。");
 
       await chrome.storage.local.set({ smartNavData: remoteData });
 
-      // Notify UI
-      notifyTabs("Data updated from cloud.");
+      await updateSyncStatus(sync_settings, { syncTime: Date.now(), status: "success" });
+      notifyFrontend("refresh", "TFNP 检测到云端更新，已同步到本地。");
+      notifyFrontend("toast", "TFNP 已从云端拉取最新配置。");
     } else {
       console.log("Data is up to date.");
+      // 即使没有数据传输，也算作一次成功的“检查”
+      await updateSyncStatus(sync_settings, { status: "success" });
     }
-
-    await updateSyncStatus(sync_settings, new Date().toISOString(), "success");
   } catch (error) {
     console.error("Sync Error:", error);
+    // 获取最新的 settings 以避免覆盖
     const { sync_settings } = await chrome.storage.local.get(["sync_settings"]);
     if (sync_settings) {
-      await updateSyncStatus(sync_settings, new Date().toISOString(), `error: ${error.message}`);
+      const errorMsg = error.message || "未知网络错误";
+      await updateSyncStatus(sync_settings, { status: `error: ${errorMsg}` });
     }
-    throw error; // Re-throw for UI handling
+    // 向前端抛出异常以便 Modal 显示
+    throw error;
   } finally {
     isSyncing = false;
   }
 }
 
-async function updateSyncStatus(currentSettings, time, status) {
-  const newSettings = {
-    ...currentSettings,
-    last_sync_time: time,
-    last_sync_status: status,
-  };
+// 辅助函数：更新状态，支持部分更新
+async function updateSyncStatus(currentSettings, { checkTime, syncTime, status } = {}) {
+  // 重新读取一次以防止并发覆盖
+  const { sync_settings: latestSettings } = await chrome.storage.local.get("sync_settings");
+  const baseSettings = latestSettings || currentSettings;
+
+  const newSettings = { ...baseSettings };
+
+  if (checkTime) newSettings.last_check_time = checkTime;
+  if (syncTime) newSettings.last_sync_success_time = syncTime;
+  if (status) newSettings.last_sync_status = status;
+
   await chrome.storage.local.set({ sync_settings: newSettings });
 }
 
-function notifyTabs(msg) {
+function notifyFrontend(type, message) {
   chrome.tabs.query({}, (tabs) => {
     tabs.forEach((tab) => {
-      if ((tab.url && tab.url.startsWith("http")) || tab.url.startsWith("chrome-extension")) {
-        chrome.tabs
-          .sendMessage(tab.id, {
-            action: "sync_completed_refresh",
-            message: msg,
-          })
-          .catch(() => {});
-      }
+      const action = type === "refresh" ? "sync_completed_refresh" : "show_toast";
+      chrome.tabs.sendMessage(tab.id, { action: action, message: message }).catch(() => {});
     });
   });
 }

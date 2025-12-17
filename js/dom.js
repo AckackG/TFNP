@@ -37,7 +37,6 @@ export const mergeImportBtn = document.getElementById("mergeImportBtn");
 export const overwriteImportBtn = document.getElementById("overwriteImportBtn");
 export const cancelImportBtn = document.getElementById("cancelImportBtn");
 
-
 // Icon Modal Form elements
 export const iconForm = document.getElementById("iconForm");
 export const iconModalLabel = document.getElementById("iconModalLabel");
@@ -80,5 +79,8 @@ export const syncUsernameInput = document.getElementById("syncUsername");
 export const syncPasswordInput = document.getElementById("syncPassword");
 export const syncIntervalInput = document.getElementById("syncInterval");
 export const syncStatusMsg = document.getElementById("syncStatusMsg");
+export const syncLastCheckMsg = document.getElementById("syncLastCheckMsg");
+export const syncLastSuccessMsg = document.getElementById("syncLastSuccessMsg");
+export const toastContainer = document.getElementById("toastContainer");
 export const triggerSyncBtn = document.getElementById("triggerSyncBtn");
 export const saveSyncSettingsBtn = document.getElementById("saveSyncSettingsBtn");

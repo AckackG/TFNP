@@ -21,13 +21,13 @@ const setupEventListeners = () => {
 
   // Sync Settings
   if (DOM.openSyncSettingsBtn) {
-      DOM.openSyncSettingsBtn.addEventListener("click", Handlers.showSyncSettingsModal);
+    DOM.openSyncSettingsBtn.addEventListener("click", Handlers.showSyncSettingsModal);
   }
   if (DOM.saveSyncSettingsBtn) {
-      DOM.saveSyncSettingsBtn.addEventListener("click", Handlers.saveSyncSettings);
+    DOM.saveSyncSettingsBtn.addEventListener("click", Handlers.saveSyncSettings);
   }
   if (DOM.triggerSyncBtn) {
-      DOM.triggerSyncBtn.addEventListener("click", Handlers.handleTriggerSync);
+    DOM.triggerSyncBtn.addEventListener("click", Handlers.handleTriggerSync);
   }
 
   // File Inputs
@@ -194,14 +194,45 @@ const initializeApp = async () => {
 // Start the app
 document.addEventListener("DOMContentLoaded", initializeApp);
 
-// Listener for Sync Updates (Soft Refresh)
 chrome.runtime.onMessage.addListener(async (request) => {
   if (request.action === "sync_completed_refresh") {
     console.log("Sync finished, updating UI...");
-    // 1. Reload data from storage into state
     await loadData();
-    // 2. Re-render the UI grid
     render();
-    console.log("UI Updated.");
+  }
+
+  // --- ADDED: Toast Notification Handler ---
+  else if (request.action === "show_toast") {
+    showToast(request.message);
   }
 });
+
+// Helper function to create and show a toast dynamically
+const showToast = (message) => {
+  const toastContainer = document.getElementById("toast-container");
+  if (!toastContainer) return;
+
+  const toastEl = document.createElement("div");
+  toastEl.className = "toast align-items-center text-white bg-success border-0";
+  toastEl.setAttribute("role", "alert");
+  toastEl.setAttribute("aria-live", "assertive");
+  toastEl.setAttribute("aria-atomic", "true");
+
+  toastEl.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">
+          ${message}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+    `;
+
+  toastContainer.appendChild(toastEl);
+  const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+  toast.show();
+
+  // Remove from DOM after hidden
+  toastEl.addEventListener("hidden.bs.toast", () => {
+    toastEl.remove();
+  });
+};
