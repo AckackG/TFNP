@@ -159,7 +159,9 @@ export const handleIconFormSubmit = async (e) => {
       order: tab.icons.length,
     });
   }
-  await saveData();
+
+  // 标识为 'config' 变更
+  await saveData("config");
   render();
   DOM.iconModal.hide();
 };
@@ -170,7 +172,9 @@ export const handleDeleteIcon = async () => {
     const tab = state.appData.config.tabs.find((t) => t.id === state.activeTabId);
     tab.icons = tab.icons.filter((i) => i.id !== id);
     delete state.appData.statistics.iconStats[id];
-    await saveData();
+
+    // 标识为 'config' 变更
+    await saveData("config");
     render();
     DOM.iconModal.hide();
   }
@@ -186,7 +190,6 @@ export const moveIconToTab = async (iconId, sourceTabId, targetTabId) => {
   }
 
   const iconIndex = sourceTab.icons.findIndex((i) => i.id === iconId);
-
   if (iconIndex > -1) {
     const [movedIcon] = sourceTab.icons.splice(iconIndex, 1);
 
@@ -197,7 +200,8 @@ export const moveIconToTab = async (iconId, sourceTabId, targetTabId) => {
       icon.order = index;
     });
 
-    await saveData();
+    // 标识为 'config' 变更
+    await saveData("config");
     render();
     DOM.iconModal.hide();
   } else {
@@ -216,21 +220,27 @@ export const renderTabManagementList = () => {
   const list = DOM.tabManagementList;
   list.innerHTML = "";
   state.appData.config.tabs.sort((a, b) => a.order - b.order);
+
   state.appData.config.tabs.forEach((tab) => {
     const item = document.createElement("li");
     item.className =
       "list-group-item d-flex justify-content-between align-items-center tab-management-item";
-    item.innerHTML = `<div class="d-flex align-items-center flex-grow-1"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grip-vertical me-2" viewBox="0 0 16 16" style="cursor: grab;"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg> <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}"> </div> <button class="btn btn-sm btn-outline-danger ms-2" data-tab-id="${tab.id}"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg> </button>`;
+    item.innerHTML = `<div class="d-flex align-items-center flex-grow-1"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-grip-vertical me-2" viewBox="0 0 16 16" style="cursor: grab;"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 
+0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm-3 3a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg> <input type="text" class="form-control" value="${tab.name}" data-tab-id="${tab.id}"> </div> <button class="btn btn-sm btn-outline-danger ms-2" data-tab-id="${tab.id}"> <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 
+16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg> </button>`;
+
     item.querySelector("input").addEventListener("change", async (e) => {
       const tabId = e.target.dataset.tabId;
       const newName = e.target.value.trim();
       if (newName) {
         const targetTab = state.appData.config.tabs.find((t) => t.id === tabId);
         targetTab.name = newName;
-        await saveData();
+        // 标识为 'config' 变更
+        await saveData("config");
         render();
       }
     });
+
     item.querySelector("button").addEventListener("click", async (e) => {
       if (state.appData.config.tabs.length <= 1) {
         alert("必须至少保留一个标签页。");
@@ -248,7 +258,8 @@ export const renderTabManagementList = () => {
         if (state.activeTabId === tabId) {
           state.activeTabId = state.appData.config.tabs[0].id;
         }
-        await saveData();
+        // 标识为 'config' 变更
+        await saveData("config");
         render();
         renderTabManagementList();
       }
@@ -268,7 +279,8 @@ export const renderTabManagementList = () => {
         tab.order = index;
       });
 
-      await saveData();
+      // 标识为 'config' 变更
+      await saveData("config");
       render();
     },
   });
@@ -284,7 +296,8 @@ export const handleAddTab = async () => {
       icons: [],
     });
     DOM.newTabNameInput.value = "";
-    await saveData();
+    // 标识为 'config' 变更
+    await saveData("config");
     renderTabManagementList();
     render();
   }
@@ -301,7 +314,9 @@ export const recordClick = async (iconId) => {
   }
   stats[iconId].totalClicks++;
   stats[iconId].timestamps.push(Date.now());
-  await saveData();
+
+  // 关键修改：标识为 'stats' 变更，不会触发自动同步
+  await saveData("stats");
 };
 
 const renderStatsList = (listElement, data) => {
@@ -570,7 +585,8 @@ export const handleMergeImport = async () => {
   });
 
   if (changesMade) {
-    await saveData();
+    // 标识为 'config' 变更
+    await saveData("config");
     alert("合并成功！页面将刷新。");
     location.reload();
   } else {
@@ -583,14 +599,15 @@ export const handleMergeImport = async () => {
 
 export const handleOverwriteImport = async () => {
   if (!state.importedData) return;
-
   // Update state
   state.appData = state.importedData;
 
   // CRITICAL: Force update the timestamp to now so Sync sees this as a new change
   state.appData.update_timestamp = Date.now();
+  state.appData.stats_timestamp = Date.now(); // 同时也重置统计时间戳
 
-  await saveData();
+  // 标识为 'config' 变更
+  await saveData("config");
   alert("覆盖成功！页面将刷新。");
   state.importedData = null;
   DOM.importMergeModal.hide();
@@ -677,7 +694,12 @@ export const handleWeTabImport = (event) => {
       });
 
       state.appData = newSmartNavData;
-      await saveData();
+      // 初始化新的时间戳
+      state.appData.update_timestamp = Date.now();
+      state.appData.stats_timestamp = Date.now();
+
+      // 标识为 'config' 变更
+      await saveData("config");
       alert("从 WeTab 导入成功！页面将刷新。");
       location.reload();
     } catch (error) {
