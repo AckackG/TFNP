@@ -16,7 +16,6 @@ export const state = {
   appData: {},
   activeTabId: null,
   sortableInstances: [],
-  faviconAbortController: null,
   currentSearchEngine: "google", // 'google', 'bing', or 'sogou'
   importedData: null,
 };

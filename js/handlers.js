@@ -1,8 +1,17 @@
 import * as DOM from "./dom.js";
 import { state, saveData, saveSearchEnginePreference } from "./state.js";
 import { render, getFaviconUrl } from "./ui.js";
-import { fetchFavicon, normalizeUrl } from "./utils.js";
+import { abortFaviconFetch, fetchFavicon, normalizeUrl } from "./utils.js";
 import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
+
+const normalizeImportedDataUrls = (data) => {
+  data.config?.tabs?.forEach((tab) => {
+    tab.icons?.forEach((icon) => {
+      icon.url = normalizeUrl(icon.url);
+    });
+  });
+  return data;
+};
 
 // --- UI Initialization ---
 export const initializeModalUIs = () => {
@@ -70,6 +79,7 @@ export const showAddIconModal = () => {
   DOM.moveIconContainer.classList.add("d-none");
   DOM.faviconPreview.classList.add("d-none");
   DOM.faviconSpinner.classList.add("d-none");
+  DOM.faviconPreview.dataset.faviconCache = DEFAULT_FAVICON;
 
   DOM.borderColorSelector.querySelector(".selected")?.classList.remove("selected");
   DOM.borderColorSelector.querySelector('[data-color="transparent"]').classList.add("selected");
@@ -92,6 +102,7 @@ export const showEditIconModal = (iconId, tabId) => {
     DOM.nameInput.value = icon.name;
     DOM.descriptionInput.value = icon.description;
     DOM.faviconPreview.src = getFaviconUrl(icon.faviconCache);
+    DOM.faviconPreview.dataset.faviconCache = icon.faviconCache || DEFAULT_FAVICON;
     DOM.faviconPreview.classList.remove("d-none");
     DOM.faviconSpinner.classList.add("d-none");
     DOM.deleteIconBtn.classList.remove("d-none");
@@ -120,23 +131,16 @@ export const showEditIconModal = (iconId, tabId) => {
 
 export const handleIconFormSubmit = async (e) => {
   e.preventDefault();
-  if (state.faviconAbortController) {
-    state.faviconAbortController.abort();
-  }
+  abortFaviconFetch();
   const id = DOM.iconIdInput.value;
-  const url = DOM.urlInput.value;
+  const url = normalizeUrl(DOM.urlInput.value);
   const name = DOM.nameInput.value;
   const description = DOM.descriptionInput.value;
   const tab = state.appData.config.tabs.find((t) => t.id === state.activeTabId);
 
-  let faviconCache;
-  if (DOM.faviconPreview.classList.contains("d-none") || !DOM.faviconPreview.src) {
-    faviconCache = DEFAULT_FAVICON;
-  } else if (DOM.faviconPreview.src.endsWith("icons/icon48.png")) {
-    faviconCache = DEFAULT_FAVICON;
-  } else {
-    faviconCache = DOM.faviconPreview.src;
-  }
+  const faviconCache = DOM.faviconPreview.classList.contains("d-none")
+    ? DEFAULT_FAVICON
+    : DOM.faviconPreview.dataset.faviconCache || DEFAULT_FAVICON;
 
   const selectedColorEl = DOM.borderColorSelector.querySelector(".selected");
   const borderColor = selectedColorEl ? selectedColorEl.dataset.color : "transparent";
@@ -485,7 +489,7 @@ export const importData = (event) => {
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const importedData = JSON.parse(e.target.result);
+      const importedData = normalizeImportedDataUrls(JSON.parse(e.target.result));
       if (
         !importedData.version ||
         !importedData.config ||
@@ -578,7 +582,7 @@ export const handleMergeImport = async () => {
           order: localTab.icons.length,
         };
         localTab.icons.push(newIcon);
-        localUrls.add(newIcon.url);
+        localUrls.add(normalizeUrl(newIcon.url));
         changesMade = true;
       }
     });
@@ -660,7 +664,7 @@ export const handleWeTabImport = (event) => {
           targetIconsArray.push({
             id: newIconId,
             name: item.name || "未命名",
-            url: item.target,
+            url: normalizeUrl(item.target),
             description: "",
             faviconCache: item.bgImage || DEFAULT_FAVICON,
             borderColor: "transparent",

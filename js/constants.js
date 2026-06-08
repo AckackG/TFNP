@@ -6,6 +6,7 @@ export const SEARCH_ENGINES = {
 
 // 默认图标标识符
 export const DEFAULT_FAVICON = "default48";
+export const CHROME_FAVICON_PREFIX = "chrome-favicon:";
 
 // 边框颜色选项 (第一个为透明)
 export const BORDER_COLORS = [

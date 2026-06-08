@@ -1,13 +1,19 @@
 import * as DOM from "./dom.js";
 import { state, saveData } from "./state.js";
-import { DEFAULT_FAVICON } from "./constants.js";
+import { CHROME_FAVICON_PREFIX, DEFAULT_FAVICON } from "./constants.js";
 import { showEditIconModal, recordClick } from "./handlers.js";
 
 // 获取实际的图标 URL
 export const getFaviconUrl = (faviconCache) => {
-  if (faviconCache === "default48") {
+  if (!faviconCache || faviconCache === DEFAULT_FAVICON) {
     return "icons/icon48.png";
   }
+
+  if (faviconCache.startsWith(CHROME_FAVICON_PREFIX)) {
+    const pageUrl = faviconCache.slice(CHROME_FAVICON_PREFIX.length);
+    return chrome.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=64`);
+  }
+
   return faviconCache || "icons/icon48.png";
 };
 

@@ -1,80 +1,162 @@
-import { state } from "./state.js";
 import * as DOM from "./dom.js";
-import { DEFAULT_FAVICON } from "./constants.js";
+import { CHROME_FAVICON_PREFIX, DEFAULT_FAVICON } from "./constants.js";
+
+const URL_WITH_SCHEME_RE = /^[a-z][a-z\d+.-]*:\/\//i;
+let faviconAbortController = null;
+
+const resolveChromeFaviconUrl = (pageUrl) =>
+  chrome.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=64`);
+
+const getFaviconDisplayUrl = (faviconCache) => {
+  if (!faviconCache || faviconCache === DEFAULT_FAVICON) {
+    return "icons/icon48.png";
+  }
+
+  if (faviconCache.startsWith(CHROME_FAVICON_PREFIX)) {
+    return resolveChromeFaviconUrl(faviconCache.slice(CHROME_FAVICON_PREFIX.length));
+  }
+
+  return faviconCache;
+};
+
+const getUrlInfo = (url) => {
+  const normalizedUrl = normalizeUrl(url);
+  try {
+    const parsed = new URL(normalizedUrl);
+    if (!["http:", "https:"].includes(parsed.protocol)) return null;
+    return {
+      normalizedUrl,
+      hostname: parsed.hostname,
+      origin: parsed.origin,
+    };
+  } catch (error) {
+    console.warn(`Invalid URL: ${url}`, error);
+    return null;
+  }
+};
+
+const waitForImageLoad = (src, signal) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+
+    const cleanup = () => {
+      image.onload = null;
+      image.onerror = null;
+      signal?.removeEventListener("abort", abort);
+    };
+
+    const abort = () => {
+      cleanup();
+      reject(new DOMException("Favicon request aborted", "AbortError"));
+    };
+
+    image.onload = () => {
+      cleanup();
+      resolve(src);
+    };
+    image.onerror = () => {
+      cleanup();
+      reject(new Error(`Could not load favicon: ${src}`));
+    };
+
+    if (signal?.aborted) {
+      abort();
+      return;
+    }
+
+    signal?.addEventListener("abort", abort, { once: true });
+    image.referrerPolicy = "no-referrer";
+    image.src = src;
+  });
 
 export const fetchFavicon = async (url) => {
-  if (state.faviconAbortController) {
-    state.faviconAbortController.abort();
-  }
-  state.faviconAbortController = new AbortController();
-  const signal = state.faviconAbortController.signal;
+  abortFaviconFetch();
+  faviconAbortController = new AbortController();
+  const signal = faviconAbortController.signal;
 
   DOM.faviconSpinner.classList.remove("d-none");
   DOM.faviconPreview.classList.add("d-none");
 
-  const setFavicon = (base64data) => {
+  const setFavicon = (faviconCache) => {
     if (!signal.aborted) {
-      DOM.faviconPreview.src = base64data;
+      DOM.faviconPreview.dataset.faviconCache = faviconCache;
+      DOM.faviconPreview.src = getFaviconDisplayUrl(faviconCache);
       DOM.faviconSpinner.classList.add("d-none");
       DOM.faviconPreview.classList.remove("d-none");
     }
   };
 
-  const convertUrlToBase64 = async (imageUrl) => {
-    try {
-      const response = await fetch(imageUrl, { signal });
-      if (!response.ok) throw new Error(`Response not OK: ${response.status}`);
-      const blob = await response.blob();
-      const reader = new FileReader();
-      return new Promise((resolve, reject) => {
-        reader.onloadend = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const getHostname = (url) => {
-    try {
-      if (!/^https?:\/\//i.test(url)) {
-        url = `https://${url}`;
-      }
-      return new URL(url).hostname; // Extract domain (e.g., google.com)
-    } catch (error) {
-      console.warn(`Invalid URL: ${url}`, error);
-      return null;
-    }
-  };
-
-  const domain = getHostname(url);
-  if (!domain) {
+  const urlInfo = getUrlInfo(url);
+  if (!urlInfo) {
     console.log("Invalid URL, using default favicon");
     setFavicon(DEFAULT_FAVICON);
     return;
   }
 
-  // Use Favicone API
-  try {
-    console.log(`Attempting Favicone API for domain: ${domain}`);
-    const faviconUrl = `https://favicone.com/${domain}?s=64`;
-    const base64 = await convertUrlToBase64(faviconUrl);
-    setFavicon(base64);
-    console.log("Favicone API succeeded");
-  } catch (error) {
-    if (error.name === "AbortError") return;
-    console.warn("Favicone API failed:", error);
-    console.log("Using default favicon");
-    setFavicon(DEFAULT_FAVICON);
+  const candidates = [
+    `${urlInfo.origin}/favicon.ico`,
+    `${urlInfo.origin}/apple-touch-icon.png`,
+    `https://favicone.com/${urlInfo.hostname}?s=64`,
+    `${CHROME_FAVICON_PREFIX}${urlInfo.normalizedUrl}`,
+  ];
+
+  for (const faviconCache of candidates) {
+    try {
+      const displayUrl = getFaviconDisplayUrl(faviconCache);
+      await waitForImageLoad(displayUrl, signal);
+      setFavicon(faviconCache);
+      return;
+    } catch (error) {
+      if (error.name === "AbortError") return;
+      console.warn("Favicon candidate failed:", faviconCache, error);
+    }
+  }
+
+  console.log("Using default favicon");
+  setFavicon(DEFAULT_FAVICON);
+};
+
+export const abortFaviconFetch = () => {
+  if (faviconAbortController) {
+    faviconAbortController.abort();
+    faviconAbortController = null;
   }
 };
 
 export const normalizeUrl = (url) => {
-  if (url.endsWith('/')) {
-    return url.slice(0, -1);
+  if (typeof url !== "string") return "";
+
+  const trimmedUrl = url.trim();
+  if (!trimmedUrl) return "";
+
+  const candidate = URL_WITH_SCHEME_RE.test(trimmedUrl) ? trimmedUrl : `https://${trimmedUrl}`;
+
+  try {
+    const parsed = new URL(candidate);
+
+    if (!["http:", "https:"].includes(parsed.protocol)) {
+      return trimmedUrl.replace(/[\\/]+$/g, "");
+    }
+
+    parsed.hostname = parsed.hostname.toLowerCase();
+    parsed.hash = "";
+
+    if (
+      (parsed.protocol === "http:" && parsed.port === "80") ||
+      (parsed.protocol === "https:" && parsed.port === "443")
+    ) {
+      parsed.port = "";
+    }
+
+    parsed.pathname = parsed.pathname.replace(/\/{2,}/g, "/");
+    if (parsed.pathname !== "/") {
+      parsed.pathname = parsed.pathname.replace(/[\\/]+$/g, "");
+    }
+
+    return parsed.toString();
+  } catch (error) {
+    return trimmedUrl.replace(/[\\/]+$/g, "");
   }
-  return url;
 };
 
 export const debounce = (func, wait) => {
