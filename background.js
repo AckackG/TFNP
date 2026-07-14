@@ -8,7 +8,9 @@ const getInitialData = () => ({
     ],
   },
   statistics: { iconStats: {} },
-  update_timestamp: Date.now()
+  // 时间戳为 0：全新安装的空数据在首次同步时应拉取云端，而不是推送空数据覆盖云端
+  update_timestamp: 0,
+  stats_timestamp: 0
 });
 
 chrome.runtime.onInstalled.addListener(async (details) => {

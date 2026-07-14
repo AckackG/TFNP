@@ -9,6 +9,15 @@ const FILES = {
   META: "meta.json",
 };
 
+// 统计配置里的图标总数，用于判断配置是否为"空"
+function countConfigIcons(config) {
+  if (!config || !Array.isArray(config.tabs)) return 0;
+  return config.tabs.reduce(
+    (sum, tab) => sum + (Array.isArray(tab.icons) ? tab.icons.length : 0),
+    0
+  );
+}
+
 export async function performSync(force = false) {
   if (isSyncing) {
     console.log("Sync in progress, skipping.");
@@ -86,39 +95,61 @@ export async function performSync(force = false) {
 
     // --- CONFIG 同步逻辑 ---
     if (localConfigTs > metaData.update_timestamp) {
-      // PUSH Config
-      console.log("Pushing Config...");
+      // 安全兜底：本地配置为空时，绝不推送去覆盖云端可能存在的非空数据
+      // （典型场景：全新浏览器首次同步，或异常时间戳导致误判为"本地更新"）
+      if (countConfigIcons(localData.config) === 0 && metaData.update_timestamp > 0) {
+        console.warn("本地配置为空，跳过推送以防覆盖云端数据；改为尝试拉取云端配置。");
+        const remoteConfig = await client.getFile(FILES.CONFIG);
+        if (remoteConfig && countConfigIcons(remoteConfig.config) > 0) {
+          if (!newDataToSave) newDataToSave = { ...localData };
+          newDataToSave.config = remoteConfig.config;
+          newDataToSave.version = remoteConfig.version;
+          newDataToSave.update_timestamp = remoteConfig.update_timestamp;
+          configChanged = true;
+          syncResultMessages.push("已阻止空数据覆盖，改为拉取云端配置");
+        }
+        // 云端也无有效数据时不做任何操作（不推送空配置）
+      } else {
+        // PUSH Config
+        console.log("Pushing Config...");
 
-      // 构造 Config 对象。
-      // 注意：为了保持文件结构的向后兼容性，我们依然写入 statistics 键，但内容为空。
-      // 实际的统计数据现在存放在 FILES.STATS 中。
-      const configPayload = {
-        version: localData.version,
-        config: localData.config,
-        statistics: { iconStats: {} }, // 占位符
-        update_timestamp: localConfigTs,
-      };
+        // 构造 Config 对象。
+        // 注意：为了保持文件结构的向后兼容性，我们依然写入 statistics 键，但内容为空。
+        // 实际的统计数据现在存放在 FILES.STATS 中。
+        const configPayload = {
+          version: localData.version,
+          config: localData.config,
+          statistics: { iconStats: {} }, // 占位符
+          update_timestamp: localConfigTs,
+        };
 
-      await client.putFile(FILES.CONFIG, configPayload);
-      metaData.update_timestamp = localConfigTs;
-      configChanged = true;
-      configPushed = true;
-      syncResultMessages.push("本地配置已推送");
+        await client.putFile(FILES.CONFIG, configPayload);
+        metaData.update_timestamp = localConfigTs;
+        configChanged = true;
+        configPushed = true;
+        syncResultMessages.push("本地配置已推送");
+      }
     } else if (metaData.update_timestamp > localConfigTs) {
       // PULL Config
       console.log("Pulling Config...");
       const remoteConfig = await client.getFile(FILES.CONFIG);
 
       if (remoteConfig) {
-        if (!newDataToSave) newDataToSave = { ...localData };
+        // 安全兜底：云端为空但本地有数据时，不用空数据覆盖本地（例如别的设备误推了空数据）
+        // 本地数据得以保留，用户下次编辑即可把正确数据重新推回云端，实现恢复
+        if (countConfigIcons(remoteConfig.config) === 0 && countConfigIcons(localData.config) > 0) {
+          console.warn("云端配置为空但本地有数据，跳过拉取以防丢失本地数据。");
+        } else {
+          if (!newDataToSave) newDataToSave = { ...localData };
 
-        // 仅合并 Config 部分
-        newDataToSave.config = remoteConfig.config;
-        newDataToSave.version = remoteConfig.version;
-        newDataToSave.update_timestamp = remoteConfig.update_timestamp;
+          // 仅合并 Config 部分
+          newDataToSave.config = remoteConfig.config;
+          newDataToSave.version = remoteConfig.version;
+          newDataToSave.update_timestamp = remoteConfig.update_timestamp;
 
-        configChanged = true;
-        syncResultMessages.push("云端配置已拉取");
+          configChanged = true;
+          syncResultMessages.push("云端配置已拉取");
+        }
       }
     }
 

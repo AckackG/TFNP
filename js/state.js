@@ -21,7 +21,7 @@ export const state = {
 };
 
 export const loadData = async () => {
-  const result = await chrome.storage.local.get(["smartNavData", "searchEngine"]);
+  const result = await chrome.storage.local.get(["smartNavData", "searchEngine", "activeTabId"]);
   // Handle main app data
   if (result.smartNavData) {
     state.appData = result.smartNavData;
@@ -49,18 +49,23 @@ export const loadData = async () => {
     if (state.appData.config.tabs.length === 0) {
       state.appData.config.tabs.push({ id: `tab-${Date.now()}`, name: "主页", order: 0, icons: [] });
     }
-    state.activeTabId = state.appData.config.tabs[0].id;
+    // 恢复上次选中的标签页（本地设置，不参与同步）；若已失效则回退到第一个
+    const tabs = state.appData.config.tabs;
+    state.activeTabId = tabs.some((t) => t.id === result.activeTabId)
+      ? result.activeTabId
+      : tabs[0].id;
   } else {
+    // 全新/空配置的时间戳必须为 0，确保首次同步走"拉取云端"而非"推送空数据覆盖云端"
     state.appData = {
       version: "1.0",
       config: { tabs: [{ id: `tab-${Date.now()}`, name: "主页", order: 0, icons: [] }] },
       statistics: { iconStats: {} },
-      update_timestamp: Date.now(), // Config timestamp
-      stats_timestamp: Date.now(), // Stats timestamp
+      update_timestamp: 0, // Config timestamp
+      stats_timestamp: 0, // Stats timestamp
     };
     state.activeTabId = state.appData.config.tabs[0].id;
-    // 初始化保存，默认为 config 类型
-    await saveData("config");
+    // 直接落盘，绕过 saveData（它会把时间戳自增为 now，导致空数据被判为"最新"）
+    await chrome.storage.local.set({ smartNavData: state.appData });
   }
 
   // Handle search engine preference
@@ -103,4 +108,9 @@ export const saveData = async (type = "config") => {
 
 export const saveSearchEnginePreference = async () => {
   await chrome.storage.local.set({ searchEngine: state.currentSearchEngine });
+};
+
+// 记住当前选中的标签页（本地设置，独立键，不参与同步）
+export const saveActiveTabPreference = async () => {
+  await chrome.storage.local.set({ activeTabId: state.activeTabId });
 };

@@ -1,5 +1,5 @@
 import * as DOM from "./dom.js";
-import { state, loadData } from "./state.js";
+import { state, loadData, saveActiveTabPreference } from "./state.js";
 import { render } from "./ui.js";
 import * as Handlers from "./handlers.js";
 import { fetchFavicon, debounce } from "./utils.js";
@@ -134,6 +134,7 @@ const setupEventListeners = () => {
     const tabButton = e.target.closest("button[data-tab-id]");
     if (tabButton) {
       state.activeTabId = tabButton.dataset.tabId;
+      saveActiveTabPreference(); // 记住当前选中的标签页（本地，不同步）
       // Call the main render function to ensure everything, including SortableJS, is re-initialized.
       render();
     }
