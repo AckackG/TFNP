@@ -14,6 +14,8 @@ export class WebDAVClient {
     this.username = username;
     this.password = password;
     this.baseDir = "TFNewPage/";
+    // 缓存"目录已确认"的 Promise，避免每次读写都重复发 PROPFIND（坚果云对请求频率限制较严）
+    this._dirReady = null;
   }
 
   get headers() {
@@ -39,6 +41,16 @@ export class WebDAVClient {
   }
 
   async ensureDirectory() {
+    // 单个 client 实例生命周期内只确认一次；失败则清空缓存以便后续重试
+    if (this._dirReady) return this._dirReady;
+    this._dirReady = this._ensureDirectory().catch((err) => {
+      this._dirReady = null;
+      throw err;
+    });
+    return this._dirReady;
+  }
+
+  async _ensureDirectory() {
     const dirUrl = this.baseUrl + this.baseDir;
     const checkRes = await fetch(dirUrl, {
       method: "PROPFIND",

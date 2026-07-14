@@ -8,11 +8,9 @@ export const manageTabsBtn = document.getElementById("manageTabsBtn");
 export const showStatsBtn = document.getElementById("showStatsBtn");
 export const importBtn = document.getElementById("importBtn");
 export const exportBtn = document.getElementById("exportBtn");
-export const importWeTabBtn = document.getElementById("importWeTabBtn");
 
 // File inputs
 export const importFileInput = document.getElementById("importFile");
-export const importWeTabFileInput = document.getElementById("importWeTabFile");
 
 // Search elements
 export const searchInput = document.getElementById("searchInput");

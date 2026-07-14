@@ -25,7 +25,17 @@ export const loadData = async () => {
   // Handle main app data
   if (result.smartNavData) {
     state.appData = result.smartNavData;
-    // Ensure new stats structure exists for backward compatibility
+
+    // 兜底：确保核心结构存在，兼容老版本 / 损坏数据，避免直接崩溃白屏
+    if (!state.appData.config || typeof state.appData.config !== "object") {
+      state.appData.config = { tabs: [] };
+    }
+    if (!Array.isArray(state.appData.config.tabs)) {
+      state.appData.config.tabs = [];
+    }
+    if (!state.appData.statistics || typeof state.appData.statistics !== "object") {
+      state.appData.statistics = { iconStats: {} };
+    }
     if (!state.appData.statistics.iconStats) {
       state.appData.statistics.iconStats = {};
     }
@@ -35,9 +45,11 @@ export const loadData = async () => {
       state.appData.stats_timestamp = state.appData.update_timestamp || 0;
     }
 
-    if (state.appData.config.tabs.length > 0) {
-      state.activeTabId = state.appData.config.tabs[0].id;
+    // 若标签页为空（异常数据），补一个默认主页，保证界面可用
+    if (state.appData.config.tabs.length === 0) {
+      state.appData.config.tabs.push({ id: `tab-${Date.now()}`, name: "主页", order: 0, icons: [] });
     }
+    state.activeTabId = state.appData.config.tabs[0].id;
   } else {
     state.appData = {
       version: "1.0",

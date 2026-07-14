@@ -17,7 +17,6 @@ const setupEventListeners = () => {
   });
   DOM.exportBtn.addEventListener("click", Handlers.exportData);
   DOM.importBtn.addEventListener("click", () => DOM.importFileInput.click());
-  DOM.importWeTabBtn.addEventListener("click", () => DOM.importWeTabFileInput.click());
 
   // Sync Settings
   if (DOM.openSyncSettingsBtn) {
@@ -32,7 +31,6 @@ const setupEventListeners = () => {
 
   // File Inputs
   DOM.importFileInput.addEventListener("change", Handlers.importData);
-  DOM.importWeTabFileInput.addEventListener("change", Handlers.handleWeTabImport);
 
   // Import Merge Modal
   DOM.mergeImportBtn.addEventListener("click", Handlers.handleMergeImport);

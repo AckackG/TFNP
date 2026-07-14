@@ -1,21 +1,6 @@
 import * as DOM from "./dom.js";
 import { state, saveData } from "./state.js";
-import { CHROME_FAVICON_PREFIX, DEFAULT_FAVICON } from "./constants.js";
-import { showEditIconModal, recordClick } from "./handlers.js";
-
-// 获取实际的图标 URL
-export const getFaviconUrl = (faviconCache) => {
-  if (!faviconCache || faviconCache === DEFAULT_FAVICON) {
-    return "icons/icon48.png";
-  }
-
-  if (faviconCache.startsWith(CHROME_FAVICON_PREFIX)) {
-    const pageUrl = faviconCache.slice(CHROME_FAVICON_PREFIX.length);
-    return chrome.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=64`);
-  }
-
-  return faviconCache || "icons/icon48.png";
-};
+import { getFaviconUrl } from "./utils.js";
 
 export const render = () => {
   renderTabs();
@@ -30,11 +15,15 @@ export const renderTabs = () => {
   state.appData.config.tabs.forEach((tab) => {
     const li = document.createElement("li");
     li.className = "nav-item";
-    li.innerHTML = `
-              <button class="nav-link ${
-                tab.id === state.activeTabId ? "active" : ""
-              }" data-bs-toggle="tab" data-tab-id="${tab.id}" type="button">${tab.name}</button>
-          `;
+
+    const button = document.createElement("button");
+    button.className = `nav-link ${tab.id === state.activeTabId ? "active" : ""}`;
+    button.dataset.bsToggle = "tab";
+    button.dataset.tabId = tab.id;
+    button.type = "button";
+    button.textContent = tab.name; // 用 textContent 避免标签名中的 HTML 被解析
+
+    li.appendChild(button);
     DOM.tabContainer.appendChild(li);
   });
 };
@@ -60,17 +49,25 @@ export const renderTabContents = () => {
       item.dataset.bsToggle = "tooltip";
       item.dataset.bsPlacement = "bottom";
       item.title = icon.description || icon.url;
-      item.innerHTML = `
-              <div class="icon-image-wrapper">
-                <img src="${getFaviconUrl(icon.faviconCache)}" alt="${icon.name} favicon">
-              </div>
-              <span class="icon-item-name">${icon.name}</span>
-          `;
 
+      // 用 DOM API 而非 innerHTML 拼接，避免 name/url 中的 HTML 被解析（尤其是导入的数据）
+      const wrapper = document.createElement("div");
+      wrapper.className = "icon-image-wrapper";
       if (icon.borderColor && icon.borderColor !== "transparent") {
-        const wrapper = item.querySelector(".icon-image-wrapper");
         wrapper.style.borderColor = icon.borderColor;
       }
+
+      const img = document.createElement("img");
+      img.src = getFaviconUrl(icon.faviconCache);
+      img.alt = `${icon.name} favicon`;
+      wrapper.appendChild(img);
+
+      const nameSpan = document.createElement("span");
+      nameSpan.className = "icon-item-name";
+      nameSpan.textContent = icon.name;
+
+      item.appendChild(wrapper);
+      item.appendChild(nameSpan);
 
       grid.appendChild(item);
     });

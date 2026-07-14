@@ -80,6 +80,8 @@ export async function performSync(force = false) {
 
     let configChanged = false;
     let statsChanged = false;
+    let configPushed = false;
+    let statsPushed = false;
     let newDataToSave = null;
 
     // --- CONFIG 同步逻辑 ---
@@ -100,6 +102,7 @@ export async function performSync(force = false) {
       await client.putFile(FILES.CONFIG, configPayload);
       metaData.update_timestamp = localConfigTs;
       configChanged = true;
+      configPushed = true;
       syncResultMessages.push("本地配置已推送");
     } else if (metaData.update_timestamp > localConfigTs) {
       // PULL Config
@@ -132,6 +135,7 @@ export async function performSync(force = false) {
       await client.putFile(FILES.STATS, statsPayload);
       metaData.stats_updatetime = localStatsTs;
       statsChanged = true;
+      statsPushed = true;
       // 仅在强制同步时提示统计推送，避免打扰
       if (force) syncResultMessages.push("本地统计已推送");
     } else if (metaData.stats_updatetime > localStatsTs) {
@@ -151,31 +155,9 @@ export async function performSync(force = false) {
       }
     }
 
-    // 5. 更新 Meta (如果本地向云端推送了任何数据)
-    // 只有当我们是数据的"发送方"（版本更新方）时，才需要更新 meta.json
-    // 如果我们只是拉取了数据，meta.json 应该由产生那个数据的客户端去写（或者已经写了）
-    if (
-      localConfigTs > metaData.update_timestamp ||
-      localStatsTs > metaData.stats_updatetime ||
-      (configChanged && !newDataToSave) ||
-      (statsChanged && !newDataToSave)
-    ) {
-      // 注意：上面的逻辑中，如果是 Push 操作，metaData 对象已经被更新为最新的时间戳
-      await client.putFileJson(FILES.META, metaData);
-    }
-    // 修正逻辑：只要 metaData 在内存中被更新了（意味着我们执行了 Push），就应该写入
-    // 但为了保险，我们只在确实执行了 putFile 后写入。上面的 if 条件稍显复杂，简化如下：
-    // 只要执行了 Push Config 或 Push Stats，我们就要更新 Meta。
-    if (configChanged && localConfigTs === metaData.update_timestamp) {
-      /* Push happened */
-    }
-    // 采用更直接的判断：
-    const pushedConfig =
-      localConfigTs > 0 && localConfigTs === metaData.update_timestamp && configChanged;
-    const pushedStats =
-      localStatsTs > 0 && localStatsTs === metaData.stats_updatetime && statsChanged;
-
-    if (pushedConfig || pushedStats) {
+    // 5. 更新 Meta：只有当本地向云端推送了数据（Config 或 Stats）时才需要写 meta.json。
+    // 纯拉取场景下 meta.json 由推送方负责写入，这里不重复写。
+    if (configPushed || statsPushed) {
       await client.putFileJson(FILES.META, metaData);
     }
 

@@ -7,7 +7,7 @@ let faviconAbortController = null;
 const resolveChromeFaviconUrl = (pageUrl) =>
   chrome.runtime.getURL(`/_favicon/?pageUrl=${encodeURIComponent(pageUrl)}&size=64`);
 
-const getFaviconDisplayUrl = (faviconCache) => {
+export const getFaviconUrl = (faviconCache) => {
   if (!faviconCache || faviconCache === DEFAULT_FAVICON) {
     return "icons/icon48.png";
   }
@@ -80,7 +80,7 @@ export const fetchFavicon = async (url) => {
   const setFavicon = (faviconCache) => {
     if (!signal.aborted) {
       DOM.faviconPreview.dataset.faviconCache = faviconCache;
-      DOM.faviconPreview.src = getFaviconDisplayUrl(faviconCache);
+      DOM.faviconPreview.src = getFaviconUrl(faviconCache);
       DOM.faviconSpinner.classList.add("d-none");
       DOM.faviconPreview.classList.remove("d-none");
     }
@@ -102,7 +102,7 @@ export const fetchFavicon = async (url) => {
 
   for (const faviconCache of candidates) {
     try {
-      const displayUrl = getFaviconDisplayUrl(faviconCache);
+      const displayUrl = getFaviconUrl(faviconCache);
       await waitForImageLoad(displayUrl, signal);
       setFavicon(faviconCache);
       return;

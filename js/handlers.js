@@ -1,7 +1,7 @@
 import * as DOM from "./dom.js";
 import { state, saveData, saveSearchEnginePreference } from "./state.js";
-import { render, getFaviconUrl } from "./ui.js";
-import { abortFaviconFetch, fetchFavicon, normalizeUrl } from "./utils.js";
+import { render } from "./ui.js";
+import { abortFaviconFetch, fetchFavicon, normalizeUrl, getFaviconUrl } from "./utils.js";
 import { SEARCH_ENGINES, DEFAULT_FAVICON, BORDER_COLORS } from "./constants.js";
 
 const normalizeImportedDataUrls = (data) => {
@@ -311,13 +311,13 @@ export const handleAddTab = async () => {
 export const recordClick = async (iconId) => {
   const stats = state.appData.statistics.iconStats;
   if (!stats[iconId]) {
-    stats[iconId] = {
-      totalClicks: 0,
-      timestamps: [],
-    };
+    stats[iconId] = { totalClicks: 0 };
   }
   stats[iconId].totalClicks++;
-  stats[iconId].timestamps.push(Date.now());
+  // timestamps 从未被读取，历史上会无限增长并拖大同步体积；此处顺带清理旧数据
+  if (stats[iconId].timestamps) {
+    delete stats[iconId].timestamps;
+  }
 
   // 关键修改：标识为 'stats' 变更，不会触发自动同步
   await saveData("stats");
@@ -621,99 +621,6 @@ export const handleOverwriteImport = async () => {
 export const handleCancelImport = () => {
   state.importedData = null;
   DOM.importMergeModal.hide();
-};
-
-export const handleWeTabImport = (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  if (!confirm("从 WeTab 导入将覆盖所有现有数据，此操作不可逆，请确认。")) {
-    DOM.importWeTabFileInput.value = "";
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const wetabData = JSON.parse(e.target.result);
-
-      if (
-        !wetabData.data ||
-        !wetabData.data["store-icon"] ||
-        !Array.isArray(wetabData.data["store-icon"].icons)
-      ) {
-        throw new Error('无效的 WeTab 文件格式。未找到 "store-icon" 数据。');
-      }
-
-      const newSmartNavData = {
-        version: "1.0",
-        config: { tabs: [] },
-        statistics: { iconStats: {} },
-      };
-
-      const wetabCategories = wetabData.data["store-icon"].icons;
-
-      const processWetabItem = (item, targetIconsArray, targetStatsObject) => {
-        if (item.type === "folder-icon" && Array.isArray(item.children)) {
-          item.children.forEach((child) =>
-            processWetabItem(child, targetIconsArray, targetStatsObject)
-          );
-        } else if (item.type === "site" && item.target) {
-          const newIconId = `icon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-          targetIconsArray.push({
-            id: newIconId,
-            name: item.name || "未命名",
-            url: normalizeUrl(item.target),
-            description: "",
-            faviconCache: item.bgImage || DEFAULT_FAVICON,
-            borderColor: "transparent",
-            order: targetIconsArray.length,
-          });
-
-          if (item.total > 0) {
-            targetStatsObject[newIconId] = {
-              totalClicks: item.total,
-              timestamps: item.lasttime > 0 ? [item.lasttime] : [],
-            };
-          }
-        }
-      };
-
-      wetabCategories.forEach((category, index) => {
-        const newTab = {
-          id: `tab-${Date.now()}-${index}`,
-          name: category.name || `导入标签页 ${index + 1}`,
-          order: index,
-          icons: [],
-        };
-
-        if (Array.isArray(category.children)) {
-          category.children.forEach((item) => {
-            processWetabItem(item, newTab.icons, newSmartNavData.statistics.iconStats);
-          });
-        }
-
-        newSmartNavData.config.tabs.push(newTab);
-      });
-
-      state.appData = newSmartNavData;
-      // 初始化新的时间戳
-      state.appData.update_timestamp = Date.now();
-      state.appData.stats_timestamp = Date.now();
-
-      // 标识为 'config' 变更
-      await saveData("config");
-      alert("从 WeTab 导入成功！页面将刷新。");
-      location.reload();
-    } catch (error) {
-      alert(`导入失败：${error.message}`);
-      console.error("WeTab import error:", error);
-    } finally {
-      DOM.importWeTabFileInput.value = "";
-    }
-  };
-  reader.readAsText(file);
 };
 
 // --- Sync Settings Handlers ---
